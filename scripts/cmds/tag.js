@@ -1,80 +1,55 @@
 module.exports = {
   config: {
     name: "tag",
-    version: "3.0",
-    category: "box chat",
+    alises:[],
+    category: 'box chat',
     role: 0,
-    author: "xalman",
+    author: 'dipto',
     countDown: 3,
-    description: {
-      en: "Real mention users"
-    },
+    description: { en: '𝗧𝗮𝗴𝘀 𝗮 𝘂𝘀𝗲𝗿 𝘁𝗼 𝘁𝗵𝗲 𝗽𝗿𝗼𝘃𝗶𝗱𝗲𝗱 𝗻𝗮𝗺𝗲 𝗼𝗿 𝗺𝗲𝘀𝘀𝗮𝗴𝗲 𝗿𝗲𝗽𝗹𝘆.' },
     guide: {
-      en: "{pm}tag [name]\n{pm}tag all\nReply + {pm}tag"
-    }
+      en: `1. Reply to a message\n2. Use {pm}tag [name]\n3. Use {pm}tag [name] [message] `
+    },
   },
-
   onStart: async ({ api, event, usersData, threadsData, args }) => {
     const { threadID, messageID, messageReply } = event;
-
     try {
-      const threadData = await threadsData.get(threadID);
-      const members = threadData.members
-        .filter(m => m.inGroup === true)
-        .map(m => ({
-          name: m.name || "User",
-          id: m.userID
-        }));
-
-      let tagUsers = [];
-
+      const d = await threadsData.get(threadID);
+      const dd = d.members.map(gud => gud.name);
+      const pp = d.members.map(gud => gud.userID);
+      const combined = dd.map((name, index) => ({
+        Name: name,
+        UserId: pp[index]
+      }));
+      let namesToTag = [];
+      let extraMessage = args.join(' ');
+      let m = messageID;
       if (messageReply) {
+        m = messageReply.messageID;
         const uid = messageReply.senderID;
-        const name = (await usersData.getName(uid)) || "User";
-        tagUsers.push({ name, id: uid });
-      } else if (args[0] && ["all", "cdi", "everyone"].includes(args[0].toLowerCase())) {
-        tagUsers = members;
+        const name = await usersData.getName(uid);
+        namesToTag.push({ Name: name, UserId: uid });
       } else {
-        if (!args[0]) {
-          return api.sendMessage("⚠️ Mention user or reply.", threadID, messageID);
-        }
-
-        const searchName = args[0].toLowerCase();
-        tagUsers = members.filter(m => m.name.toLowerCase().includes(searchName));
-
-        if (tagUsers.length === 0) {
-          return api.sendMessage("❌ User Not Found", threadID, messageID);
+        extraMessage = args.slice(1).join(' ');
+        const namesToCheck = args.length > 0 ? [args[0]] : ['dip'];
+        namesToTag = combined.filter(member =>
+          namesToCheck.some(name => member.Name.toLowerCase().includes(name.toLowerCase())));
+        if (namesToTag.length === 0) {
+          return api.sendMessage('not found', threadID, messageID);
         }
       }
-
-      const mentions = [];
-      const nameTags = [];
-      const nameCount = {};
-
-      for (const u of tagUsers) {
-        let tag = `@${u.name}`;
-
-        if (nameCount[u.name]) {
-          tag += "\u200B".repeat(nameCount[u.name]);
-          nameCount[u.name]++;
-        } else {
-          nameCount[u.name] = 1;
-        }
-
-        nameTags.push(tag);
-        mentions.push({ tag: tag, id: u.id });
-      }
-
-      const body = nameTags.join(" ");
-
-      return api.sendMessage(
-        { body, mentions },
-        threadID,
-        messageReply ? messageReply.messageID : messageID
-      );
-
-    } catch (err) {
-      return api.sendMessage("❌ Error: " + err.message, threadID, messageID);
+      const mentions = namesToTag.map(({ Name, UserId }) => ({
+        tag: Name,
+        id: UserId
+      }));
+      const body = namesToTag.map(({ Name }) => Name).join(', ');
+      const finalBody = extraMessage ? `${body} - ${extraMessage}` : body;
+      api.sendMessage({
+          body: finalBody,
+          mentions
+        },threadID,m);
+    } catch (e) {
+      api.sendMessage(e.message, threadID, messageID);
     }
   }
 };
