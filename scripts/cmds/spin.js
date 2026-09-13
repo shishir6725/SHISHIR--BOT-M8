@@ -6,7 +6,7 @@ const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 hours
 const WIN_CHANCE  = 0.35; // 35% win, 65% loss
 
 // distinct "crystal vault" theme — not fruit, not hearts/animals
-const ITEMS = ["🎲", "🛑", "🔮", "⏳", "🌙", "⭐", "💎"];
+const ITEMS = ["💠", "🔷", "🔮", "✨", "🌙", "⭐", "💎"];
 
 const SPIN_FRAMES  = 4;
 const SPIN_DELAY_MS = 450;
