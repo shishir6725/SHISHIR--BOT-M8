@@ -148,7 +148,7 @@ module.exports = {
       ctx.font = "bold 32px Arial";
       ctx.fillStyle = rainbow;
       ctx.textAlign = "center";
-      ctx.fillText("🌈 SYSTEM DASHBOARD", width / 2, 70);
+      ctx.fillText("🌈 SHISHIR-BOT-M8", width / 2, 70);
 
       ctx.font = "18px Arial";
       ctx.fillStyle = TEXT_COLOR;
