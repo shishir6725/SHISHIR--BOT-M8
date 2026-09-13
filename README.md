@@ -1,24 +1,24 @@
 <div align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D001A,50:7000FF,100:00D9FF&height=280&section=header&text=GOAT-BOT-UPDATED&fontSize=76&fontColor=FFFFFF&animation=fadeIn&fontAlignY=38&desc=⚡%20Rebuilt.%20Refined.%20Reloaded.%20⚡&descSize=22&descAlignY=62&descColor=FFD700" width="100%"/><br><br>
 
-<img src="https://i.imgur.com/3JyONMI.jpeg" width="1942" height="809" alt="GOAT-BOT-UPDATED"><br><br>
+<img src="https://i.imgur.com/3JyONMI.jpeg" width="1942" height="809" alt="SHISHIR -BOT-M8"><br><br>
 
-<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=32&duration=2800&pause=600&color=9D4EDD&center=true&vCenter=true&width=850&lines=🔥+GOAT-BOT-UPDATED;⚡+Next-Generation+Messenger+Bot;💎+Premium+Automation+System;🚀+Fast+%7C+Stable+%7C+Powerful;🛡️+Built+For+Performance" alt="Typing Animation"><br><br>
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=32&duration=2800&pause=600&color=9D4EDD&center=true&vCenter=true&width=850&lines=🔥+SHISHIR -BOT-M8;⚡+Next-Generation+Messenger+Bot;💎+Premium+Automation+System;🚀+Fast+%7C+Stable+%7C+Powerful;🛡️+Built+For+Performance" alt="Typing Animation"><br><br>
 
-<img src="https://komarev.com/ghpvc/?username=goatbotnx&label=PROFILE+VIEWS&color=7000FF&style=for-the-badge&abbreviated=true" alt="Profile Views"><br><br>
+<img src="https://komarev.com/ghpvc/?username=shishirbot&label=PROFILE+VIEWS&color=7000FF&style=for-the-badge&abbreviated=true" alt="Profile Views"><br><br>
 
-<a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED">
-<img src="https://img.shields.io/github/stars/goatbotnx/GOAT-BOT-UPDATED?style=for-the-badge&logo=github&label=STARS&color=7000FF" alt="Stars">
-</a><a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED/network/members">
-<img src="https://img.shields.io/github/forks/goatbotnx/GOAT-BOT-UPDATED?style=for-the-badge&logo=github&label=FORKS&color=00D9FF" alt="Forks">
-</a><a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED">
-<img src="https://img.shields.io/github/watchers/goatbotnx/GOAT-BOT-UPDATED?style=for-the-badge&logo=github&label=WATCHERS&color=9D4EDD" alt="Watchers">
-</a><a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED">
-<img src="https://img.shields.io/github/last-commit/goatbotnx/GOAT-BOT-UPDATED?style=for-the-badge&logo=github&label=LAST%20UPDATE&color=FFD700" alt="Last Commit">
-</a><a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED/blob/main/LICENSE">
+<a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git">
+<img src="https://img.shields.io/github/stars/shishirbot/SHISHIR -BOT-M8 Myle=for-the-badge&logo=github&label=STARS&color=7000FF" alt="Stars">
+</a><a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git/network/members">
+<img src="https://img.shields.io/github/forks/shishirbot/SHISHIR -BOT-M8?style=for-the-badge&logo=github&label=FORKS&color=00D9FF" alt="Forks">
+</a><a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git">
+<img src="https://img.shields.io/github/watchers/shushirbot/GOSHISHIR-BOT-M8?style=for-the-badge&logo=github&label=WATCHERS&color=9D4EDD" alt="Watchers">
+</a><a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git">
+<img src="https://img.shields.io/github/last-commit/goatbotnx/SHISHIR -BOT-M8?style=for-the-badge&logo=github&label=LAST%20UPDATE&color=FFD700" alt="Last Commit">
+</a><a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git/blob/main/LICENSE">
 <img src="https://img.shields.io/badge/LICENSE-MIT-FFD700?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License">
 </a></div>---
 
-<div align="center">🐐 GOAT-BOT-UPDATED
+<div align="center">🐐 SHISHIR -BOT-M8
 
 "Next-Generation Facebook Messenger Automation"
 
@@ -28,7 +28,7 @@ Powerful • Modular • Fast • Customizable
 
 ✨ About
 
-GOAT-BOT-UPDATED is a powerful and modular Facebook Messenger automation bot designed for performance, flexibility and easy customization.
+SHISHIR -BOT-M8 is a powerful and modular Facebook Messenger automation bot designed for performance, flexibility and easy customization.
 
 The project provides a command-based architecture with support for automation, AI, media processing, user management, group management and premium features.
 
@@ -122,8 +122,8 @@ Five clean permission tiers, checked in strict priority order.
 🎨 Project Identity
 
 <div align="center">| 
-🐐 Project| GOAT-BOT-UPDATED
-👨‍💻 Developer| NX / XALMAN
+🐐 Project| SHISHIR -BOT-M8
+👨‍💻 Developer| AhmeD'z SHI'SHIR 
 🟢 Node.js| 22.x
 📜 License| MIT
 
@@ -158,8 +158,8 @@ onChat
 
 📥 Installation
 
-git clone https://github.com/goatbotnx/GOAT-BOT-UPDATED.git
-cd GOAT-BOT-UPDATED
+git clone https://github.com/shishir5499/SHISHIR--BOT-M8.git.git
+cd SHISHIR -BOT-M8
 npm install
 
 ---
@@ -199,7 +199,7 @@ node index.js
 
 👀 Visitor Counter
 
-<div align="center"><img src="https://komarev.com/ghpvc/?username=goatbotnx&label=GOAT-BOT+VISITORS&color=7000FF&style=for-the-badge&abbreviated=true" alt="GOAT-BOT Visitors"></div>---
+<div align="center"><img src="https://komarev.com/ghpvc/?username=goatbotnx&label=SHISHIR -BOT+VISITORS&color=7000FF&style=for-the-badge&abbreviated=true" alt="SHISHIR -BOT Visitors"></div>---
 
 🌟 Project Goals
 
@@ -232,7 +232,7 @@ Pull Request
 
 ⭐ Support
 
-<div align="center">If you like GOAT-BOT-UPDATED, consider supporting the project.
+<div align="center">If you like SHISHIR -BOT-M8, consider supporting the project.
 
 ⭐ Star the repository
 
@@ -246,14 +246,14 @@ Pull Request
 
 </div>---
 
-<div align="center">💜 NX
+<div align="center">💜 YOuR Abbu
 
-"NEGATIVE XALMAN"
+"AhmeD'z SHI'SHIR "
 
 Developer • Builder • Creator
 
 <br><img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&duration=3000&pause=800&color=7000FF&center=true&vCenter=true&width=650&lines=BUILDING+THE+FUTURE;CODE+%7C+AI+%7C+AUTOMATION;GOAT-BOT-UPDATED" alt="NX"><br><br>
 
-<a href="https://github.com/goatbotnx/GOAT-BOT-UPDATED">
-<img src="https://img.shields.io/badge/GOAT--BOT--UPDATED-7000FF?style=for-the-badge&logo=github&logoColor=white" alt="GOAT-BOT-UPDATED">
+<a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git">
+<img src="https://img.shields.io/badge/SHISHIR--BOT--M8-7000FF?style=for-the-badge&logo=github&logoColor=white" alt="SHISHIR-BOT-M8">
 </a></div><br><div align="center"><img src="https://capsule-render.vercel.app/api?type=waving&color=0:00D9FF,50:7000FF,100:0D001A&height=140&section=footer" width="100%"></div>
