@@ -1,163 +1,143 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+!cmd install spin.js "use strict";
 
-const GIF_URLS = {
-  loss: "https://i.imgur.com/GDNNKbs.gif",
-  "1x": "https://i.imgur.com/oQExgHx.gif",
-  "2x": "https://i.imgur.com/0AmSYWc.gif",
-  "3x": "https://i.imgur.com/urR3V6F.gif",
-  "4x": "https://i.imgur.com/RGDTCQ8.gif"
-};
+const MAX_BET     = 20000000; // 20M
+const MAX_SPINS   = 30;
+const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 hours
+const WIN_CHANCE  = 0.35; // 35% win, 65% loss
+
+// distinct "crystal vault" theme — not fruit, not hearts/animals
+const ITEMS = ["🎲", "🛑", "🔮", "⏳", "🌙", "⭐", "💎"];
+
+const SPIN_FRAMES  = 4;
+const SPIN_DELAY_MS = 450;
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function todayKey() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" }); // YYYY-MM-DD
+}
+
+function fmt(num) {
+  num = Number(num) || 0;
+  if (num >= 1e9) return "$" + (num / 1e9).toFixed(2).replace(/\.00$/, "") + "B";
+  if (num >= 1e6) return "$" + (num / 1e6).toFixed(2).replace(/\.00$/, "") + "M";
+  if (num >= 1e3) return "$" + (num / 1e3).toFixed(2).replace(/\.00$/, "") + "K";
+  return "$" + num.toLocaleString();
+}
+
+function randomRow() {
+  return Array.from({ length: 5 }, () => ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+}
+
+function spinFrameText(row) {
+  return `🔮 Spinning...\n\n┃ ${row.join(" ┃ ")} ┃`;
+}
+
+async function getDailyStats(usersData, uid) {
+  const userData = (await usersData.get(uid)) || {};
+  const stats = userData.data?.slotStats;
+  if (!stats || stats.date !== todayKey()) {
+    return { date: todayKey(), wonTotal: 0, lostTotal: 0 };
+  }
+  return stats;
+}
+
+async function saveDailyStats(usersData, uid, stats) {
+  const userData = (await usersData.get(uid)) || {};
+  if (!userData.data) userData.data = {};
+  userData.data.slotStats = stats;
+  await usersData.set(uid, { data: userData.data });
+}
+
+/** builds a 5-symbol reel matching the given result tier */
+function buildReel(tier) {
+  const shuffled = [...ITEMS].sort(() => Math.random() - 0.5);
+  const main = shuffled[0];
+  const other = () => {
+    let s;
+    do { s = shuffled[Math.floor(Math.random() * shuffled.length)]; } while (s === main);
+    return s;
+  };
+
+  if (tier === "jackpot") return [main, main, main, main, main];
+
+  if (tier === "quad") {
+    const arr = [main, main, main, main, other()];
+    return Math.random() < 0.5 ? arr : [arr[4], arr[0], arr[1], arr[2], arr[3]];
+  }
+
+  if (tier === "triple") {
+    const start = [0, 1, 2][Math.floor(Math.random() * 3)];
+    const arr = new Array(5).fill(null);
+    for (let i = 0; i < 3; i++) arr[start + i] = main;
+    for (let i = 0; i < 5; i++) if (arr[i] === null) arr[i] = other();
+    return arr;
+  }
+
+  if (tier === "twoPair") {
+    const patterns = [[0, 1, 3, 4], [0, 1, 2, 3], [1, 2, 3, 4]];
+    const [a, b, c, d] = patterns[Math.floor(Math.random() * patterns.length)];
+    const secondary = other();
+    const arr = new Array(5).fill(null);
+    arr[a] = main; arr[b] = main; arr[c] = secondary; arr[d] = secondary;
+    for (let i = 0; i < 5; i++) if (arr[i] === null) arr[i] = other();
+    return arr;
+  }
+
+  if (tier === "onePair") {
+    const patterns = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 4]];
+    const [a, b] = patterns[Math.floor(Math.random() * patterns.length)];
+    const arr = new Array(5).fill(null);
+    arr[a] = main; arr[b] = main;
+    for (let i = 0; i < 5; i++) if (arr[i] === null) arr[i] = other();
+    return arr;
+  }
+
+  return shuffled.slice(0, 5); // loss — 5 distinct symbols, guaranteed no pair
+}
+
+function parseAmount(input) {
+  if (typeof input !== "string") return input;
+  const unit = input.slice(-1).toLowerCase();
+  const value = parseFloat(input);
+  if (unit === "k") return value * 1000;
+  if (unit === "m") return value * 1000000;
+  if (unit === "b") return value * 1000000000;
+  return value;
+}
 
 module.exports = {
   config: {
-    name: "spin",
-    version: "2.0",
-    author: "xalman",
-    role: 2,
+    name: "slot",
+    version: "5.0",
+    author: "ARIYAN AI",
     countDown: 5,
-    category: "GAMES",
-    guide: {
-      en: "{pn} <amount>"
-    }
+    role: 0,
+    category: "Game",
+    guide: "{pn} <amount> (Example: !slot 10k, !slot 1m, !slot 20m)"
   },
 
-  onStart: async ({ message, event, args, usersData, api }) => {
-    const { senderID, threadID } = event;
-    const cacheDir = path.join(__dirname, "cache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+  onStart: async function ({ api, args, message, event, usersData }) {
+    const { senderID } = event;
+    const userData = await usersData.get(senderID);
 
-    const formatMoney = (num) => {
-      const n = Number(num);
-      if (n === Infinity || isNaN(n)) return "∞";
-      if (n < 1000) return n.toFixed(0);
-      const units = [
-        { v: 1e12, s: "T" },
-        { v: 1e9, s: "B" },
-        { v: 1e6, s: "M" },
-        { v: 1e3, s: "K" }
-      ];
-      for (let u of units) {
-        if (n >= u.v)
-          return (n / u.v).toFixed(2).replace(/\.00$/, "") + u.s;
-      }
-      return n.toLocaleString();
-    };
+    if (!args[0]) return message.reply("❌ কত টাকা স্লট মারতে চান তা লিখুন। (যেমন: !slot 100k)");
+    let amount = parseAmount(args[0]);
 
-    function parseAmount(input) {
-      if (!input) return NaN;
-      let a = input.toLowerCase();
-      if (a.endsWith("k")) return parseFloat(a) * 1e3;
-      if (a.endsWith("m")) return parseFloat(a) * 1e6;
-      if (a.endsWith("b")) return parseFloat(a) * 1e9;
-      if (a.endsWith("t")) return parseFloat(a) * 1e12;
-      return parseInt(a);
-    }
+    if (isNaN(amount) || amount <= 0) return message.reply("❌ দয়া করে সঠিক টাকার পরিমাণ লিখুন।");
+    if (amount > MAX_BET) return message.reply(`❌ জানু, একবারে সর্বোচ্চ ${(MAX_BET / 1000000)}M পর্যন্ত স্লট মারা যাবে।`);
+    if (amount > userData.money) return message.reply(`❌ আপনার কাছে পর্যাপ্ত টাকা নেই! আপনার আছে: $${userData.money.toLocaleString()}`);
 
-    const betAmount = parseAmount(args[0]);
-    const minBet = 100;
-    const maxBet = 20000000;
-
-    if (isNaN(betAmount) || betAmount < minBet) {
-      return message.reply(`🎰 Minimum bet is 100$\nExample: /spin 1k`);
-    }
-
-    if (betAmount > maxBet) {
-      return message.reply(`🚫 Max bet: ${formatMoney(maxBet)}$`);
-    }
-
-    let userData = await usersData.get(senderID);
-    if (!userData) {
-      userData = { money: 0 };
-    }
-    const currentMoney = Number(userData.money || 0);
-
-    if (betAmount > currentMoney) {
-      return message.reply(`💸 Not enough balance!\nBalance: ${formatMoney(currentMoney)}$`);
-    }
-
-    if (!global.spinLimit) global.spinLimit = {};
+    // limit / cooldown
     const now = Date.now();
-    if (!global.spinLimit[senderID] || (now - global.spinLimit[senderID].lastReset > 3600000)) {
-      global.spinLimit[senderID] = { count: 0, lastReset: now };
-    }
+    if (!userData.data) userData.data = {};
+    if (!userData.data.slotInfo) userData.data.slotInfo = { count: 0, lastTime: now };
+    let { count, lastTime } = userData.data.slotInfo;
 
-    const maxSpins = 50;
-    if (global.spinLimit[senderID].count >= maxSpins) {
-      return message.reply(`🚫 Daily limit reached (${maxSpins} spins)`);
-    }
+    if (now - lastTime > COOLDOWN_MS) { count = 0; lastTime = now; }
 
-    const spinChance = Math.floor(Math.random() * 100);
-    let winType = "loss";
-    let multiplier = 0;
-
-    if (spinChance < 70) {
-      const winTypeRoll = Math.floor(Math.random() * 100);
-      if (winTypeRoll < 40) { winType = "1x"; multiplier = 1; }
-      else if (winTypeRoll < 70) { winType = "2x"; multiplier = 2; }
-      else if (winTypeRoll < 90) { winType = "3x"; multiplier = 3; }
-      else { winType = "4x"; multiplier = 4; }
-    }
-
-    const win = winType !== "loss";
-    const bonus = win ? betAmount * multiplier : 0;
-    const finalMoney = win ? currentMoney + bonus : currentMoney - betAmount;
-
-    userData.money = finalMoney;
-    await usersData.set(senderID, userData);
-    global.spinLimit[senderID].count++;
-
-    const statusText = win ? `JACKPOT MATCH (${multiplier}X) ✨` : "NO MATCH FOUND 💔";
-    const payoutText = win ? "Payout: +" + formatMoney(bonus) + "$" : "Loss: -" + formatMoney(betAmount) + "$";
-    const outcomeEmoji = win ? "🎉" : "💀";
-
-    const msgBody = `🎡 𝗦𝗣𝗜𝗡 𝗪𝗛𝗘𝗘𝗟
-
-${outcomeEmoji} Result: ${statusText}
-💰 ${payoutText}
-💳 Balance: ${formatMoney(finalMoney)}$
-📊 Spun Today: ${global.spinLimit[senderID].count}/${maxSpins}`;
-
-    const filePath = path.join(cacheDir, `spin_${Date.now()}.gif`);
-    api.setMessageReaction("🌀", event.messageID, () => {}, true);
-
-    try {
-      const imageResponse = await axios({
-        url: GIF_URLS[winType],
-        method: "GET",
-        responseType: "stream",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-      });
-
-      const writer = fs.createWriteStream(filePath);
-      imageResponse.data.pipe(writer);
-
-      await new Promise((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
-      });
-
-      return api.sendMessage(
-        {
-          body: msgBody,
-          attachment: fs.createReadStream(filePath)
-        },
-        threadID,
-        () => {
-          api.setMessageReaction("✅", event.messageID, () => {}, true);
-          if (fs.existsSync(filePath)) {
-            try { fs.unlinkSync(filePath); } catch {}
-          }
-        },
-        event.messageID
-      );
-    } catch (e) {
-      console.error(e);
-      api.setMessageReaction("❌", event.messageID, () => {}, true);
-      return message.reply("⚠️ Network error, please try again.");
-    }
-  }
-};
+    if (count >= MAX_SPINS) {
+      const remaining = COOLDOWN_MS - (now - lastTime);
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      return message.reply
