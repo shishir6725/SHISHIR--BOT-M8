@@ -252,7 +252,7 @@ Pull Request
 
 Developer • Builder • Creator
 
-<br><img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&duration=3000&pause=800&color=7000FF&center=true&vCenter=true&width=650&lines=BUILDING+THE+FUTURE;CODE+%7C+AI+%7C+AUTOMATION;GOAT-BOT-UPDATED" alt="𝑺𝑯𝑰𝑺𝑯𝑰𝑹"><br><br>
+<br><img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&duration=3000&pause=800&color=7000FF&center=true&vCenter=true&width=650&lines=BUILDING+THE+FUTURE;CODE+%7C+AI+%7C+AUTOMATION;GOAT-BOT-UPDATED" alt="SHISHIR"><br><br>
 
 <a href="https://github.com/shishir5499/SHISHIR--BOT-M8.git">
 <img src="https://img.shields.io/badge/SHISHIR--BOT--M8-7000FF?style=for-the-badge&logo=github&logoColor=white" alt="SHISHIR-BOT-M8">
