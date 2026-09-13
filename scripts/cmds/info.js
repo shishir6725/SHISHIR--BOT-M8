@@ -66,9 +66,8 @@ module.exports = {
     });
   },
 
-  onChat: async function ({ event, message }) {
-    if (event.body && event.body.toLowerCase() === "info") {
-      this.onStart({ message });
+  }
+};
     }
   }
 };
