@@ -3,7 +3,7 @@ const moment = require("moment-timezone");
 module.exports = {
   config: {
     name: "owner",
-    aliases: ["admininfo", "info", "ownerinfo"],
+    aliases: ["admininfo", "boss", "ownerinfo"],
     version: "3.0",
     author: "xalman",
     countDown: 5,
