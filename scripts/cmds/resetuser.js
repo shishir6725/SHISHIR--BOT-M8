@@ -1,14 +1,17 @@
-!cmd install resetuser.js module.exports = {
+"use strict";
+
+module.exports = {
   config: {
     name: "resetuser",
     aliases: ["resetbaluser"],
-    version: "1.0.0",
+    version: "1.0.1",
     author: "Ariyan",
     countDown: 5,
     role: 2,
     shortDescription: "Reset one user's balance",
     longDescription: "Reset a user's money balance to 0.",
     category: "owner",
+
     guide: {
       en: "{pn} <userID>"
     }
@@ -29,7 +32,9 @@
       const user = await usersData.get(uid);
 
       if (!user) {
-        return message.reply("❌ এই User ID database-এ পাওয়া যায়নি.");
+        return message.reply(
+          "❌ এই User ID database-এ পাওয়া যায়নি।"
+        );
       }
 
       await usersData.set(uid, {
@@ -47,7 +52,7 @@
       );
 
     } catch (error) {
-      console.error("RESETUSER ERROR:", error);
+      console.error("[RESETUSER ERROR]", error);
 
       return message.reply(
         "❌ Balance reset করতে সমস্যা হয়েছে.\n\n" +
