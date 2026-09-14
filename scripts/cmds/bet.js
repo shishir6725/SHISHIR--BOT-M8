@@ -1,106 +1,90 @@
 module.exports = {
   config: {
     name: "bet",
-    version: "11.0",
-    author: "xalman", // cmd main author tanil full system modified by xalman 
-    shortDescription: { en: "Random multiplier bet game with hourly limit" },
-    longDescription: { en: "Place a bet and win. 50% win rate and 50 plays per hour limit." },
-    category: "GAMES",
+    aliases: ["sicbo"],
+    version: "3.0",
+    author: "S1F4T",
+    countDown: 5,
+    role: 0,
+    category: "𝗀𝖺𝗆𝖾",
+    shortDescription: { en: "𝖽𝗂𝗀𝗂𝗍𝖺𝗅 𝖽𝗂𝖼𝖾 𝖻𝖾𝗍𝗍𝗂𝗇𝗀" },
+    guide: { en: "『 {pn} <𝖻𝗂𝗀/𝗌𝗆𝖺𝗅𝗅> <𝖺𝗆𝗈𝗎𝗇𝗍> 』" }
   },
 
-  langs: {
-    en: {
-      invalid_amount: "❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗔𝗠𝗢𝗨𝗡𝗧\n━━━━━━━━━━━━━━━━━━\n⚠️ Minimum bet: 1,000৳\n💡 Usage: /bet 100k | all",
-      not_enough_money: "🚫 𝗜𝗡𝗦𝗨𝗙𝗙𝗜𝗖𝗜𝗘𝗡𝗧 𝗙𝗨𝗡𝗗𝗦\n━━━━━━━━━━━━━━━━━━\n💵 Balance: %1৳\n💸 You need more money to play!",
-      max_bet: "🛡️ 𝗦𝗘𝗖𝗨𝗥𝗜𝗧𝗬 𝗔𝗟𝗘𝗥𝗧\n━━━━━━━━━━━━━━━━━━\n🚫 Max bet limit: 500M\n⚠️ High stakes blocked by system!",
-      limit_reached: "🚫 𝗟𝗜𝗠𝗜𝗧 𝗥𝗘𝗔𝗖𝗛𝗘𝗗\n━━━━━━━━━━━━━━━━━━\n⚠️ You've played 50 times this hour.\n⏳ Try again in %1 minutes.",
-      spinning: "🎰 𝗕𝗘𝗧𝗧𝗜𝗡𝗚 𝗠𝗔𝗖𝗛𝗜𝗡𝗘\n━━━━━━━━━━━━━━━━━━\n   [ 🔄 𝗦𝗣𝗜𝗡𝗡𝗜𝗡𝗚... 🔄 ]\n━━━━━━━━━━━━━━━━━━\n📡 Connecting to server...",
-      win: "✨ 𝗪𝗜𝗡𝗡𝗘𝗥 𝗗𝗘𝗖𝗟𝗔𝗥𝗘𝗗 ✨\n━━━━━━━━━━━━━━━━━━\n💰 𝗦𝘁𝗮𝘁𝘂𝘀: SUCCESS\n📈 𝗠𝘂𝗹𝘁𝗶𝗽𝗹𝗶𝗲𝗿: %1×\n💵 𝗣𝗿𝗼𝗳𝗶𝘁: +%2৳\n💳 𝗡𝗲𝘄 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: %3৳\n📊 𝗨𝘀𝗮𝗴𝗲: %4/50\n━━━━━━━━━━━━━━━━━━",
-      jackpot: "🔥 𝗝𝗔𝗖𝗞𝗣𝗢𝗧 𝗕𝗢𝗡𝗨𝗦 🔥\n━━━━━━━━━━━━━━━━━━\n💎 𝗥𝗮𝗿𝗶𝘁𝘆: LEGENDARY\n🎰 𝗥𝗲𝘄𝗮𝗿𝗱: 50× Multiplier\n💰 𝗔𝗺𝗼𝘂𝗻𝘁: +%1৳\n💳 𝗡𝗲𝘄 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: %2৳\n📊 𝗨𝘀𝗮𝗴𝗲: %3/50\n━━━━━━━━━━━━━━━━━━",
-      lose: "💀 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘─ 💀\n━━━━━━━━━━━━━━━━━━\n🔻 𝗦𝘁𝗮𝘁𝘂𝘀: FAILED\n📉 𝗟𝘂𝗰𝗸: EXPIRED\n💸 𝗟𝗼𝘀𝘁: -%1৳\n💳 𝗡𝗲𝘄 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: %2৳\n📊 𝗨𝘀𝗮𝗴𝗲: %3/50\n━━━━━━━━━━━━━━━━━━"
-    },
-  },
+  onStart: async function ({ event, api, usersData, args }) {
+    const { threadID, messageID, senderID } = event;
 
-  onStart: async function ({ args, message, event, usersData, api, getLang }) {
-    const { senderID, threadID } = event;
-    const userData = await usersData.get(senderID);
-    let balance = userData.money || 0;
-    const input = args[0]?.toLowerCase();
+    const stylize = (text) => {
+      const fonts = {
+        "a": "𝖺", "b": "𝖻", "c": "𝖼", "d": "𝖽", "e": "𝖾", "f": "𝖿", "g": "𝗀", "h": "𝗁", "i": "𝗂", "j": "𝗃", "k": "𝗄", "l": "𝗅", "m": "𝗆",
+        "n": "𝗇", "o": "𝗈", "p": "𝗉", "q": "𝗊", "r": "𝗋", "s": "𝗌", "t": "𝗍", "u": "𝗎", "v": "𝗏", "w": "𝗐", "x": "𝗑", "y": "𝗒", "z": "𝗓",
+        "0": "𝟎", "1": "𝟏", "2": "𝟐", "3": "𝟑", "4": "𝟒", "5": "𝟓", "6": "𝟔", "7": "𝟕", "8": "𝟖", "9": "𝟗"
+      };
+      return text.toString().toLowerCase().split('').map(char => fonts[char] || char).join('');
+    };
 
-    if (!input) return message.reply("❓ Syntax: /bet <amount/all/max>");
+    const parseAmount = (input) => {
+      if (!input) return NaN;
+      let value = input.toLowerCase();
+      let number = parseFloat(value);
+      if (value.endsWith('k')) return number * 1000;
+      if (value.endsWith('m')) return number * 1000000;
+      return number;
+    };
 
-    if (!global.betLimit) global.betLimit = {};
-    const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
+    const choice = args[0]?.toLowerCase();
+    const betAmount = parseAmount(args[1]);
+    const validChoices = ["big", "small", "tai", "xiu", "b", "s"];
 
-    if (!global.betLimit[senderID]) {
-        global.betLimit[senderID] = { count: 0, lastReset: now };
+    if (!validChoices.includes(choice) || isNaN(betAmount) || betAmount <= 0) {
+      return api.sendMessage(
+        `╭───────────────────╮\n\n  ᯓ  𝗂𝗇𝗏𝖺𝗅𝗂𝖽 𝖿𝗈𝗋𝗆𝖺𝗍 .ᐟ\n  ⋆ 𝗎𝗌𝖾: {pn} 𝖻𝗂𝗀 𝟧𝟢𝗄\n\n╰──────────────────────╯`,
+        threadID, messageID
+      );
     }
 
-    if (now - global.betLimit[senderID].lastReset > oneHour) {
-        global.betLimit[senderID] = { count: 0, lastReset: now };
+    let userData = await usersData.get(senderID);
+    if (userData.money < betAmount) {
+      return api.sendMessage(`ᯓ 𝗂𝗇𝗌𝗎𝖿𝖿𝗂𝖼𝗂𝖾𝗇𝗍 𝖼𝗈𝗂𝗇𝗌 \n 𝖻𝖺𝗅𝖺𝗇𝖼𝖾: ${stylize(userData.money.toLocaleString())}$`, threadID, messageID);
     }
 
-    if (global.betLimit[senderID].count >= 50) {
-        const timeLeft = Math.ceil((oneHour - (now - global.betLimit[senderID].lastReset)) / (1000 * 60));
-        return message.reply(getLang("limit_reached", timeLeft));
+    await usersData.set(senderID, { money: userData.money - betAmount });
+
+    const loadingMsg = await api.sendMessage("ᯓ 𝗌𝗁𝖺𝗄𝗂𝗇𝗀 𝖽𝗂𝖼𝖾...🤒", threadID, messageID);
+
+    const diceFaces = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+    const d1 = Math.floor(Math.random() * 6) + 1;
+    const d2 = Math.floor(Math.random() * 6) + 1;
+    const d3 = Math.floor(Math.random() * 6) + 1;
+    const total = d1 + d2 + d3;
+
+    const resultType = (total >= 11 && total <= 17) ? "big" : "small";
+    const userPick = (["big", "tai", "b"].includes(choice)) ? "big" : "small";
+    const isWin = (userPick === resultType);
+    const finalMoney = isWin ? userData.money + betAmount : userData.money - betAmount;
+
+    if (isWin) await usersData.set(senderID, { money: finalMoney });
+
+    const frames = ["⚀ ⚄ ⚃", "⚅ ⚁ ⚂", "⚃ ⚂ ⚄"];
+    for (let frame of frames) {
+      await new Promise(r => setTimeout(r, 700));
+      await api.editMessage(`┆━━━━━━━━━━━━━┆\n\n              [ ${frame} ]\n\n┆━━━━━━━━━━━━━┆`, loadingMsg.messageID, threadID);
     }
 
-    const isForceWin = input.endsWith(".win");
-    const cleanInput = isForceWin ? input.replace(".win", "") : input;
+    await new Promise(r => setTimeout(r, 500));
+    const status = isWin ? "𝗐𝗂𝗇𝗇𝖾𝗋" : "𝗅𝗈𝗌𝖾𝗋";
+    const profit = isWin ? `+${betAmount.toLocaleString()}` : `-${betAmount.toLocaleString()}`;
 
-    function parseAmount(str, userBal) {
-      if (str === "all") return userBal;
-      const units = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 };
-      const match = str.match(/^(\d+(\.\d+)?)([kmbt])?$/);
-      if (!match) return null;
-      const num = parseFloat(match[1]);
-      const unit = match[3];
-      return unit ? num * units[unit] : num;
-    }
+    const finalUI =
+      `┍━━━[𝗌𝗂𝖼𝖻𝗈 𝗋𝖾𝗌𝗎𝗅𝗍]\n\n` +
+      `  𝖽𝗂𝖼𝖾: [ ${diceFaces[d1-1]} ] [ ${diceFaces[d2-1]} ] [ ${diceFaces[d3-1]} ]\n` +
+      `  ⋆ 𝗍𝗈𝗍𝖺𝗅: ${stylize(total)} [ ${stylize(resultType)} ]\n\n` +
+      `  ⋆ 𝗉𝗅𝖺𝗒𝖾𝗋: ${stylize(userData.name)}\n` +
+      `  ⋆ 𝗋𝖾𝗌𝗎𝗅𝗍: ${stylize(profit)}$ [ ${stylize(status)} ]\n` +
+      `  ⋆ 𝗐𝖺𝗅𝗅𝖾𝗍: ${stylize(finalMoney.toLocaleString())}$ Ი𐑼\n\n` +
+      `┕━━━━━━━━━━━━━━>`;
 
-    const bet = parseAmount(cleanInput, balance);
-    const max_limit = 500000000;
-
-    if (bet === null || isNaN(bet) || bet < 1000) return message.reply(getLang("invalid_amount"));
-    if (bet > max_limit) return message.reply(getLang("max_bet"));
-    if (balance < bet) return message.reply(getLang("not_enough_money", format(balance)));
-
-    global.betLimit[senderID].count++;
-
-    const loader = await message.reply(getLang("spinning"));
-    const msgID = loader.messageID;
-
-    await new Promise(r => setTimeout(r, 1600));
-
-    let finalBal = balance;
-    let outMsg = "";
-    const rand = Math.random();
-    const currentUsage = global.betLimit[senderID].count;
-
-    if (rand < 0.01 && !isForceWin) { 
-      const jackpot = bet * 50;
-      finalBal += jackpot;
-      outMsg = getLang("jackpot", format(jackpot), format(finalBal), currentUsage);
-    } else if (rand < 0.51 || isForceWin) { 
-      const multi = (Math.random() * (2.0 - 1.2) + 1.2).toFixed(1);
-      const win = Math.floor(bet * (parseFloat(multi) - 1)); 
-      finalBal += win;
-      outMsg = getLang("win", multi, format(win), format(finalBal), currentUsage);
-    } else { 
-      finalBal -= bet;
-      outMsg = getLang("lose", format(bet), format(finalBal), currentUsage);
-    }
-
-    await usersData.set(senderID, { money: finalBal });
-    return api.editMessage(outMsg, msgID, threadID);
-
-    function format(n) {
-      if (n >= 1e12) return (n / 1e12).toFixed(2) + "T";
-      if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
-      if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
-      if (n >= 1e3) return (n / 1e3).toFixed(2) + "K";
-      return Math.floor(n).toLocaleString();
-    }
-  },
+    await api.editMessage(finalUI, loadingMsg.messageID, threadID);
+    api.setMessageReaction(isWin ? "👹✨💥🌟😻🙀🎊🎉💯🔥💢" : "🤡🤡🤡🤡🤡🤡🤡🤡🤡🤡🤡", messageID, () => {}, true);
+  }
 };
