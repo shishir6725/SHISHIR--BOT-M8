@@ -1,184 +1,227 @@
 const os = require("os");
-const moment = require("moment-timezone");
-const { createCanvas } = require("canvas");
-const GIFEncoder = require("gif-encoder-2");
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
+const { createCanvas } = require("canvas");
+const si = require("systeminformation");
+const GIFEncoder = require("gifencoder");
+
+function getHostingName() {
+  const env = process.env;
+
+  if (env.RENDER) return "Render";
+  if (env.RAILWAY_ENVIRONMENT) return "Railway";
+  if (env.VERCEL) return "Vercel";
+  if (env.REPL_ID) return "Replit";
+  if (env.FLY_APP_NAME) return "Fly.io";
+  if (env.AWS_EXECUTION_ENV) return "AWS";
+  if (env.DYNO) return "Heroku";
+  if (env.GITHUB_ACTIONS) return "GitHub Actions";
+
+  return "VPS / Local";
+}
 
 module.exports = {
   config: {
     name: "cpanel3",
-    version: "2.4.78",
-    author: "ST | Sheikh Tamim",
-    description: "Clean Red Neon Animated Dashboard",
-    category: "system",
-    role: 0
+    version: "4.0",
+    author: "Anik Islam Sadik",
+    category: "info",
+    guide: { en: "{pn} - Shows bot Info Panel." }
   },
 
-  ST: async function ({ api, event }) {
+  onStart: async function ({ message }) {
     try {
-      const width = 900, height = 600;
-      const encoder = new GIFEncoder(width, height);
+      const [cpu, load, mem, osInfo] = await Promise.all([
+        si.cpu(),
+        si.currentLoad(),
+        si.mem(),
+        si.osInfo()
+      ]);
 
-      const filePath = path.join(__dirname, `cpanel_${Date.now()}.gif`);
-      const stream = fs.createWriteStream(filePath);
+      const uptime = process.uptime() * 1000;
+      const uptimeFormatted = formatUptime(uptime);
 
-      encoder.createReadStream().pipe(stream);
+      const bdTime = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Dhaka"
+      });
+
+      const canvasWidth = 900;
+      const canvasHeight = 600;
+      const outputPath = path.join(
+        __dirname,
+        "cache",
+        `c_panel_${Date.now()}.gif`
+      );
+
+      await fs.ensureDir(path.dirname(outputPath));
+
+      const encoder = new GIFEncoder(canvasWidth, canvasHeight);
+      const gifStream = fs.createWriteStream(outputPath);
+      encoder.createReadStream().pipe(gifStream);
 
       encoder.start();
       encoder.setRepeat(0);
-      encoder.setDelay(90);
-      encoder.setQuality(10);
+      encoder.setDelay(250);
+      encoder.setQuality(15);
 
-      const canvas = createCanvas(width, height);
+      const canvas = createCanvas(canvasWidth, canvasHeight);
       const ctx = canvas.getContext("2d");
 
-      const format = (sec) => {
-        const d = Math.floor(sec / 86400);
-        const h = Math.floor((sec % 86400) / 3600);
-        const m = Math.floor((sec % 3600) / 60);
-        return `${d}d ${h}h ${m}m`;
+      const centerX = canvasWidth / 2;
+      const centerY = canvasHeight / 2 + 10;
+      const radius = 210;
+
+      const centerData = {
+        value: "AhameD'z SHI'SHIR ",
+        radius: 100,
+        hasLabel: false
       };
 
-      const stats = () => {
-        const total = os.totalmem() / 1024 / 1024 / 1024;
-        const free = os.freemem() / 1024 / 1024 / 1024;
-        const used = total - free;
-
-        return [
-          ["BOT UPTIME", format(process.uptime())],
-          ["CORES", os.cpus().length],
-          ["NODE", process.version],
-          ["CPU", (os.loadavg()[0]).toFixed(1) + "%"],
-          ["DISK", "66.5%"],
-          ["TOTAL DISK", "3116 GB"],
-          ["SYS UPTIME", format(os.uptime())],
-          ["RAM", ((used / total) * 100).toFixed(1) + "%"],
-          ["TOTAL RAM", total.toFixed(1) + " GB"]
-        ];
-      };
-
-      const drawHex = (x, y, label, value, frame, i, isCenter = false) => {
-        const r = isCenter ? 95 : 75;
-
-        // smooth subtle movement
-        const offsetX = Math.sin(frame * 0.05 + i) * 4;
-        const offsetY = Math.cos(frame * 0.05 + i) * 4;
-
-        // very slow rotation
-        const rot = Math.sin(frame * 0.02 + i) * 0.05;
-
-        ctx.save();
-        ctx.translate(x + offsetX, y + offsetY);
-        ctx.rotate(rot);
-
-        ctx.beginPath();
-        for (let j = 0; j < 6; j++) {
-          const ang = Math.PI / 3 * j;
-          const px = r * Math.cos(ang);
-          const py = r * Math.sin(ang);
-          j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-
-        // red glow
-        ctx.strokeStyle = "#ff4d4d";
-        ctx.shadowColor = "#ff4d4d";
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(20,20,30,0.85)";
-        ctx.fill();
-
-        ctx.restore();
-
-        // TEXT
-        ctx.textAlign = "center";
-
-        if (isCenter) {
-          ctx.fillStyle = "#ff4d4d";
-          ctx.font = "bold 28px Arial";
-          ctx.fillText("OWNER", x, y - 10);
-
-          ctx.fillStyle = "#ffffff";
-          ctx.font = "18px Arial";
-          ctx.fillText("ITS ASIF", x, y + 20);
-        } else {
-          ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 20px Arial";
-          ctx.fillText(value, x, y);
-
-          ctx.fillStyle = "#aaaaaa";
-          ctx.font = "14px Arial";
-          ctx.fillText(label, x, y + 25);
-        }
-      };
-
-      const cx = width / 2;
-      const cy = height / 2;
-
-      const gap = 140;
-
-      const positions = [
-        [cx, cy - gap],
-        [cx + gap, cy - gap / 2],
-        [cx + gap, cy + gap / 2],
-        [cx, cy + gap],
-        [cx - gap, cy + gap / 2],
-        [cx - gap, cy - gap / 2],
-        [cx - gap * 1.6, cy],
-        [cx + gap * 1.6, cy],
-        [cx, cy]
+      const stats = [
+        { label: "CORES", value: String(cpu.physicalCores) },
+        { label: "THREADS", value: String(cpu.cores) },
+        { label: "LOAD", value: `${load.currentLoad.toFixed(1)}%` },
+        { label: "USER", value: `${load.currentLoadUser.toFixed(1)}%` },
+        { label: "RAM", value: `${(mem.total / 1e9).toFixed(1)}GB` },
+        { label: "FREE", value: `${(mem.available / 1e9).toFixed(1)}GB` },
+        { label: "OS", value: osInfo.distro.split(' ')[0] },
+        { label: "HOST", value: getHostingName() },
+        { label: "NODE", value: process.version.replace('v', '') },
+        { label: "UPTIME", value: uptimeFormatted }
       ];
 
-      for (let frame = 0; frame < 30; frame++) {
-        const data = stats();
+      const circleRadius = 70;
+      const maxTextWidth = circleRadius * 1.4;
 
-        // background (dark space)
-        ctx.fillStyle = "#05070f";
-        ctx.fillRect(0, 0, width, height);
+      centerData.valueFont = fitFont(ctx, centerData.value, centerData.radius * 1.6, 26, true);
 
-        // tiny stars
+      const statCircles = stats.map((stat, idx) => {
+        const angle = (Math.PI * 2 / stats.length) * idx - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        return {
+          x, y,
+          label: stat.label,
+          value: stat.value,
+          valueFont: fitFont(ctx, stat.value, maxTextWidth, 18, true),
+          labelFont: fitFont(ctx, stat.label, maxTextWidth, 12, false)
+        };
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const hue = (i * 72) % 360;
+        const glowColor = `hsl(${hue}, 100%, 70%)`;
+
+        ctx.fillStyle = "#0a0f1a";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
         ctx.fillStyle = "#ffffff";
-        for (let i = 0; i < 40; i++) {
-          ctx.globalAlpha = Math.random();
-          ctx.fillRect(Math.random() * width, Math.random() * height, 1, 1);
-        }
-        ctx.globalAlpha = 1;
-
-        // header
-        ctx.fillStyle = "#aaaaaa";
-        ctx.font = "14px Arial";
+        ctx.font = "bold 28px Arial";
         ctx.textAlign = "left";
-        ctx.fillText(`OS: ${os.platform()} (${os.arch()})`, 20, 25);
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText("SHISHIR-BOT-M8", 30, 40);
 
+        ctx.font = "20px Arial";
         ctx.textAlign = "right";
-        ctx.fillText(moment().tz("Asia/Dhaka").format("DD/MM/YYYY HH:mm:ss"), width - 20, 25);
+        ctx.fillText(bdTime, canvasWidth - 30, 40);
 
-        // draw hex
-        for (let i = 0; i < 8; i++) {
-          drawHex(positions[i][0], positions[i][1], data[i][0], data[i][1], frame, i);
-        }
+        drawFixedCircle(ctx, centerX, centerY, centerData.radius, glowColor);
+        drawCenterText(ctx, centerX, centerY, centerData, glowColor);
 
-        // center hex
-        drawHex(positions[8][0], positions[8][1], "", "", frame, 0, true);
+        statCircles.forEach(circle => {
+          drawFixedCircle(ctx, circle.x, circle.y, circleRadius, glowColor);
+          drawFixedText(ctx, circle.x, circle.y, circle, glowColor);
+        });
 
         encoder.addFrame(ctx);
       }
 
       encoder.finish();
-
-      stream.on("finish", () => {
-        api.sendMessage({
-          body: "",
-          attachment: fs.createReadStream(filePath)
-        }, event.threadID, () => fs.unlinkSync(filePath));
+      await new Promise((res, rej) => {
+        gifStream.on("finish", res);
+        gifStream.on("error", rej);
       });
 
+      await message.reply({
+        attachment: fs.createReadStream(outputPath)
+      });
+
+      setTimeout(() => {
+        fs.unlink(outputPath).catch(() => {});
+      }, 5000);
+
     } catch (err) {
-      console.error(err);
-      api.sendMessage("❌ Error generating dashboard.", event.threadID);
+      console.error("Cpanel Error:", err);
+      message.reply("❌ Failed to generate panel.");
     }
   }
 };
+
+function fitFont(ctx, text, maxWidth, baseSize, bold) {
+  let size = baseSize;
+  ctx.font = `${bold ? "bold " : ""}${size}px Arial`;
+
+  while (ctx.measureText(text).width > maxWidth && size > 10) {
+    size--;
+    ctx.font = `${bold ? "bold " : ""}${size}px Arial`;
+  }
+  return `${bold ? "bold " : ""}${size}px Arial`;
+}
+
+function drawFixedCircle(ctx, x, y, radius, glowColor) {
+  ctx.save();
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = 20;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "#111a25";
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = glowColor;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenterText(ctx, x, y, data, glowColor) {
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.font = data.valueFont;
+  ctx.fillStyle = glowColor;
+  ctx.fillText(data.value, x, y);
+}
+
+function drawFixedText(ctx, x, y, data, glowColor) {
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.font = data.valueFont;
+  ctx.fillStyle = glowColor;
+  ctx.fillText(data.value, x, y - 6);
+
+  ctx.font = data.labelFont;
+  ctx.fillStyle = "#cccccc";
+  ctx.fillText(data.label, x, y + 10);
+}
+
+function formatUptime(ms) {
+  if (ms <= 0) return "0s";
+  let sec = Math.floor(ms / 1000);
+  const days = Math.floor(sec / 86400);
+  sec %= 86400;
+  const hours = Math.floor(sec / 3600);
+  sec %= 3600;
+  const minutes = Math.floor(sec / 60);
+  const seconds = sec % 60;
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 && parts.length === 0) parts.push(`${seconds}s`);
+
+  return parts.join(" ");
+  }
