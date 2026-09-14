@@ -1,145 +1,190 @@
 "use strict";
 
-const MAX_BET   = 20000000; // 20M
-const MAX_SPINS = 50;
+const MAX_BET = 20000000; // 20M
+const MAX_SPINS = 40;
 const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 const ITEMS = ["🔮", "⚡", "👑", "💎", "🍒", "🔥", "7️⃣"];
 
 function parseAmount(input) {
   if (typeof input !== "string") return input;
+
   const unit = input.slice(-1).toLowerCase();
   const value = parseFloat(input);
+
+  if (isNaN(value)) return NaN;
+
   if (unit === "k") return value * 1000;
   if (unit === "m") return value * 1000000;
   if (unit === "b") return value * 1000000000;
+
   return value;
 }
 
 function formatNumber(num) {
-  if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-  if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-  if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
-  return num.toString();
+  if (num >= 1e9) return (num / 1e9).toFixed(2) + "𝐁";
+  if (num >= 1e6) return (num / 1e6).toFixed(2) + "𝐌";
+  if (num >= 1e3) return (num / 1e3).toFixed(2) + "𝐊";
+  return Math.floor(num).toString();
 }
 
-/** builds 3 reel symbols matching a given tier, plus its multiplier & label */
 function rollResult() {
   const roll = Math.random() * 100;
 
+  // 1% — Mega Jackpot
   if (roll < 1) {
     const m = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+
     return {
       symbols: [m, m, m],
       multiplier: 10,
-      title: "🚨 MEGA JACKPOT! 🚨"
+      title: "🚨 𝐌𝐄𝐆𝐀 𝐉𝐀𝐂𝐊𝐏𝐎𝐓! 🚨"
     };
   }
 
+  // 4% — Wild Boost
   if (roll < 5) {
     const m = ITEMS[Math.floor(Math.random() * (ITEMS.length - 1))];
+
     return {
       symbols: [m, m, "7️⃣"],
       multiplier: 5,
-      title: "🔥 WILD BOOST! 🔥"
+      title: "🔥 𝐖𝐈𝐋𝐃 𝐁𝐎𝐎𝐒𝐓! 🔥"
     };
   }
 
+  // 10% — Sweet Strike
   if (roll < 15) {
     const m = ITEMS[Math.floor(Math.random() * ITEMS.length)];
-    const other = ITEMS.filter(x => x !== m)[
-      Math.floor(Math.random() * (ITEMS.length - 1))
-    ];
+    const others = ITEMS.filter(x => x !== m);
+    const other = others[Math.floor(Math.random() * others.length)];
 
     return {
       symbols: [m, m, other],
       multiplier: 2.5,
-      title: "✨ SWEET STRIKE! ✨"
+      title: "✨ 𝐒𝐖𝐄𝐄𝐓 𝐒𝐓𝐑𝐈𝐊𝐄! ✨"
     };
   }
 
+  // 20% — Nice Win
   if (roll < 35) {
     const m = ITEMS[Math.floor(Math.random() * ITEMS.length)];
-    const other = ITEMS.filter(x => x !== m)[
-      Math.floor(Math.random() * (ITEMS.length - 1))
-    ];
+    const others = ITEMS.filter(x => x !== m);
+    const other = others[Math.floor(Math.random() * others.length)];
 
     return {
       symbols: [m, m, other],
       multiplier: 1.5,
-      title: "🍀 NICE WIN! 🍀"
+      title: "🍀 𝐍𝐈𝐂𝐄 𝐖𝐈𝐍! 🍀"
     };
   }
 
-  // loss — 3 distinct symbols, guaranteed no pair
+  // Loss — 3 different symbols
   const shuffled = [...ITEMS].sort(() => Math.random() - 0.5);
 
   return {
     symbols: shuffled.slice(0, 3),
     multiplier: 0,
-    title: "💀 HARD LUCK 💀"
+    title: "💀 𝐇𝐀𝐑𝐃 𝐋𝐔𝐂𝐊 💀"
   };
 }
 
 module.exports = {
+
   config: {
     name: "slot",
-    version: "8.0.0",
-    author: "ARIYAN AI",
+    version: "9.0.0",
+    author: "AY-MA",
     countDown: 3,
     role: 0,
     category: "Game",
-    guide: "{pn} <amount> (Example: !slot 10k, !slot 1m, !slot 20m)"
+    guide: "{pn} <amount>\nExample: !slot 50k | !slot 1m | !slot 20m"
   },
 
   onStart: async function ({ args, message, event, usersData }) {
+
     const { senderID } = event;
 
     const userData = (await usersData.get(senderID)) || {};
-    let userMoney = userData.money || 0;
 
-    if (!args[0])
+    let userMoney = Number(userData.money || 0);
+
+    // ━━━━━━━━━━━━━━━━━━━
+    // BET CHECK
+    // ━━━━━━━━━━━━━━━━━━━
+
+    if (!args[0]) {
       return message.reply(
-        "⚠️ কত টাকা বেট ধরবেন লিখুন! (যেমন: !slot 50k)"
+        "⚠️ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐞𝐧𝐭𝐞𝐫 𝐲𝐨𝐮𝐫 𝐛𝐞𝐭!\n\n" +
+        "💡 Example: !slot 50k"
       );
+    }
 
     const amount = parseAmount(args[0]);
 
-    if (isNaN(amount) || amount <= 0)
+    if (isNaN(amount) || amount <= 0) {
       return message.reply(
-        "❌ ইনপুট সঠিক নয়! সঠিক পরিমাণ লিখুন।"
+        "❌ 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐚𝐦𝐨𝐮𝐧𝐭!\n" +
+        "💡 Example: !slot 100k"
       );
+    }
 
-    if (amount > MAX_BET)
+    if (amount > MAX_BET) {
       return message.reply(
-        `❌ একবারে সর্বোচ্চ ${formatNumber(MAX_BET)} পর্যন্ত খেলতে পারবেন!`
+        `🚫 𝐌𝐚𝐱 𝐁𝐞𝐭: $${formatNumber(MAX_BET)}`
       );
+    }
 
-    if (amount > userMoney)
+    if (amount > userMoney) {
       return message.reply(
-        `💸 আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নেই! আছে: $${formatNumber(userMoney)}`
+        `💸 𝐍𝐨𝐭 𝐄𝐧𝐨𝐮𝐠𝐡 𝐁𝐚𝐥𝐚𝐧𝐜𝐞!\n\n` +
+        `💳 𝐖𝐚𝐥𝐥𝐞𝐭: $${formatNumber(userMoney)}`
       );
+    }
 
-    // spin limit / cooldown
+    // ━━━━━━━━━━━━━━━━━━━
+    // SLOT DATA
+    // ━━━━━━━━━━━━━━━━━━━
+
     const now = Date.now();
 
-    if (!userData.data)
+    if (!userData.data) {
       userData.data = {};
+    }
 
-    if (!userData.data.slotInfo)
+    if (!userData.data.slotInfo) {
       userData.data.slotInfo = {
         count: 0,
+        wins: 0,
+        streak: 0,
         lastTime: now
       };
+    }
 
-    let { count, lastTime } = userData.data.slotInfo;
+    let slotInfo = userData.data.slotInfo;
 
-    if (now - lastTime > COOLDOWN_MS) {
+    let count = Number(slotInfo.count || 0);
+    let wins = Number(slotInfo.wins || 0);
+    let streak = Number(slotInfo.streak || 0);
+    let lastTime = Number(slotInfo.lastTime || now);
+
+    // ━━━━━━━━━━━━━━━━━━━
+    // COOLDOWN RESET
+    // ━━━━━━━━━━━━━━━━━━━
+
+    if (now - lastTime >= COOLDOWN_MS) {
       count = 0;
+      wins = 0;
+      streak = 0;
       lastTime = now;
     }
 
+    // ━━━━━━━━━━━━━━━━━━━
+    // SPIN LIMIT
+    // ━━━━━━━━━━━━━━━━━━━
+
     if (count >= MAX_SPINS) {
+
       const remaining = COOLDOWN_MS - (now - lastTime);
 
       const hours = Math.floor(
@@ -147,15 +192,26 @@ module.exports = {
       );
 
       const minutes = Math.floor(
-        (remaining % (60 * 60 * 1000)) / (60 * 1000)
+        (remaining % (60 * 60 * 1000)) /
+        (60 * 1000)
       );
 
       return message.reply(
-        `🛑 স্পিন লিমিট শেষ!\n⏳ আবার খেলতে পারবেন: ${hours}h ${minutes}m পর।`
+        `🛑 𝐒𝐏𝐈𝐍 𝐋𝐈𝐌𝐈𝐓 𝐑𝐄𝐀𝐂𝐇𝐄𝐃!\n\n` +
+        `🎟️ 𝐋𝐢𝐦𝐢𝐭: [ ${MAX_SPINS}/${MAX_SPINS} ]\n` +
+        `⏳ 𝐑𝐞𝐬𝐞𝐭𝐬 𝐈𝐧: ${hours}𝐡 ${minutes}𝐦`
       );
     }
 
-    const { symbols, multiplier, title } = rollResult();
+    // ━━━━━━━━━━━━━━━━━━━
+    // ROLL
+    // ━━━━━━━━━━━━━━━━━━━
+
+    const {
+      symbols,
+      multiplier,
+      title
+    } = rollResult();
 
     const win = multiplier > 0;
 
@@ -169,32 +225,57 @@ module.exports = {
 
     const finalMoney = userMoney + profit;
 
+    // ━━━━━━━━━━━━━━━━━━━
+    // WIN / STREAK
+    // ━━━━━━━━━━━━━━━━━━━
+
+    if (win) {
+      wins++;
+      streak++;
+    } else {
+      streak = 0;
+    }
+
+    count++;
+
+    // ━━━━━━━━━━━━━━━━━━━
+    // SAVE DATA
+    // ━━━━━━━━━━━━━━━━━━━
+
     userData.money = finalMoney;
 
     userData.data.slotInfo = {
-      count: count + 1,
+      count,
+      wins,
+      streak,
       lastTime
     };
 
     await usersData.set(senderID, userData);
 
+    // ━━━━━━━━━━━━━━━━━━━
+    // PAYOUT TEXT
+    // ━━━━━━━━━━━━━━━━━━━
+
     const payoutText = win
       ? `🟢 +$${formatNumber(profit)}`
       : `🔴 -$${formatNumber(amount)}`;
 
+    // ━━━━━━━━━━━━━━━━━━━
+    // AY-MA ZONE RESULT
+    // ━━━━━━━━━━━━━━━━━━━
+
     const resultMsg =
-      `╭━━━〔 🌸 AY-MA 𝒁𝑶𝑵𝑬 🌸 〕━━━╮\n` +
-`┃  🎰  [ ${symbols.join(" 𖤐 ")} ]\n` +
-`┃\n` +
-`┃  💀 𝑯𝑨𝑹𝑫 𝑳𝑼𝑪𝑲  💀\n` +
-`┃  ═════════════════════\n` +
-`┃  💰 𝑷𝒂𝒚𝒐𝒖𝒕  ➜  ${payoutText}\n` +
-`┃  💳 𝑾𝒂𝒍𝒍𝒆𝒕   ➜  $${formatNumber(finalMoney)}\n` +
-`┃  🎟️ 𝑺𝒑𝒊𝒏     ➜  [ ${count + 1} / ${MAX_SPINS} ]\n` +
-`┃  🏆 𝑾𝒊𝒏𝒔     ➜  ${wins}\n` +
-`┃  🔥 𝑺𝒕𝒓𝒆𝒂𝒌   ➜  ${streak}\n` +
-`┃\n` +
-`╰━━〔 ⏳ 𝑹𝒆𝒔𝒆𝒕: 𝟑 𝑯𝒐𝒖𝒓𝒔 〕━━╯`;
+      `🌸 ━━ 𝑨𝒀-𝑴𝑨 𝒁𝑶𝑵𝑬 ━━ 🌸\n` +
+      `[ ${symbols.join(" | ")} ]\n\n` +
+      `${title}\n\n` +
+      `💰 𝐏𝐚𝐲𝐨𝐮𝐭: ${payoutText}\n` +
+      `💳 𝐖𝐚𝐥𝐥𝐞𝐭: $${formatNumber(finalMoney)}\n` +
+      `🎟️ 𝐬𝐥𝐨𝐭: [ ${count}/${MAX_SPINS} ]\n` +
+      `🏆 𝐖𝐢𝐧𝐬: ${wins}\n` +
+      `🔥 𝐒𝐭𝐫𝐞𝐚𝐤: ${streak}\n\n` +
+      `⏳ 𝐋𝐢𝐦𝐢𝐭 𝐫𝐞𝐬𝐞𝐭𝐬 𝐞𝐯𝐞𝐫𝐲 3 𝐡𝐨𝐮𝐫𝐬`;
+
     return message.reply(resultMsg);
   }
 };
