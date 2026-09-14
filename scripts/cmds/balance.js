@@ -552,7 +552,7 @@ async function createBalanceCard({
         "rgba(255,255,255,0.45)";
 
     ctx.fillText(
-        "𝑴𝑨𝑫𝑬 𝑩𝒀 𝑺𝑯𝑰𝑺𝑯𝑰𝑹",
+        "MADE BY SHISHIR",
         745,
         420
     );
