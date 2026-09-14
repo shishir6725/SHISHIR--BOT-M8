@@ -183,13 +183,18 @@ module.exports = {
       : `🔴 -$${formatNumber(amount)}`;
 
     const resultMsg =
-      `🌸 ━━ 𝑨𝒀-𝑴𝑨 𝒁𝑶𝑵𝑬 ━━ 🌸\n` +
-      `[ ${symbols.join(" | ")} ]\n\n` +
-      `${title}\n` +
-      `💰 Payout: ${payoutText}\n` +
-      `💳 Wallet: $${formatNumber(finalMoney)}\n` +
-      `🎟️ Spin: [ ${count + 1}/${MAX_SPINS} ]`;
-
+      `╭━━━〔 🌸 AY-MA 𝒁𝑶𝑵𝑬 🌸 〕━━━╮\n` +
+`┃  🎰  [ ${symbols.join(" 𖤐 ")} ]\n` +
+`┃\n` +
+`┃  💀 𝑯𝑨𝑹𝑫 𝑳𝑼𝑪𝑲  💀\n` +
+`┃  ═════════════════════\n` +
+`┃  💰 𝑷𝒂𝒚𝒐𝒖𝒕  ➜  ${payoutText}\n` +
+`┃  💳 𝑾𝒂𝒍𝒍𝒆𝒕   ➜  $${formatNumber(finalMoney)}\n` +
+`┃  🎟️ 𝑺𝒑𝒊𝒏     ➜  [ ${count + 1} / ${MAX_SPINS} ]\n` +
+`┃  🏆 𝑾𝒊𝒏𝒔     ➜  ${wins}\n` +
+`┃  🔥 𝑺𝒕𝒓𝒆𝒂𝒌   ➜  ${streak}\n` +
+`┃\n` +
+`╰━━〔 ⏳ 𝑹𝒆𝒔𝒆𝒕: 𝟑 𝑯𝒐𝒖𝒓𝒔 〕━━╯`;
     return message.reply(resultMsg);
   }
 };
