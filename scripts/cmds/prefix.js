@@ -97,7 +97,7 @@ module.exports = {
 
         const mediaURLs = [
             "https://i.imgur.com/T48zGyE.mp4",
-            "https://i.imgur.com/7oj5lfP.mp4",
+            "https://i.imgur.com/NYmaID8.mp4",
         ];
 
         const cacheDir  = path.join(__dirname, "cache");
