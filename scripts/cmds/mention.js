@@ -26,7 +26,7 @@ module.exports = {
 			return api.sendMessage(
 				"কিরে মাঙ্গের নাতি, শিশির বস কে বারবার মেনশন দিস কে? 🙄🐸🌷\n\n" +
 				"Boss এখন কাজে একটু ব্যস্ত আছে, free হলে reply দিবে 🫠🌷\n\n" +
-				"বারবার mention দিলে কানের নিচে একটা থাপ্পড় দিবো 👋😡",
+				"",
 				event.threadID,
 				event.messageID
 			);
