@@ -14,8 +14,7 @@ module.exports = {
 
 	onChat: async function ({ api, event }) {
 		const bossUIDs = [
-			"61592841571046",
-			""
+			"61592841571046"
 		];
 
 		if (!event.mentions || typeof event.mentions !== "object")
@@ -25,9 +24,9 @@ module.exports = {
 
 		if (mentionedIDs.some(uid => bossUIDs.includes(uid))) {
 			return api.sendMessage(
-				"Boss ekhon busy ache free hoye reply dibe 🫠🌷",
-				"কিরে মাঙ্গের নাতি শিশির বস কে বারবার মেনশন দিস কে কইতাসি কাজে আছে একটু ব্যস্ত কথা কানে যায় না -🙄🐸🌷",
-				"kaner nise akta thapor dibo👋 boss ke bar bar mention des ke re-😡",
+				"কিরে মাঙ্গের নাতি, শিশির বস কে বারবার মেনশন দিস কে? 🙄🐸🌷\n\n" +
+				"Boss এখন কাজে একটু ব্যস্ত আছে, free হলে reply দিবে 🫠🌷\n\n" +
+				"বারবার mention দিলে কানের নিচে একটা থাপ্পড় দিবো 👋😡",
 				event.threadID,
 				event.messageID
 			);
