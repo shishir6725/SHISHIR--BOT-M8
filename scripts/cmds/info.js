@@ -7,7 +7,7 @@ function number(value) {
 
 module.exports = {
 	config: {
-		name: "whois",
+		name: "info",
 		aliases: ["whois", "userinfo", "profile"],
 		author: "Neoaz 🐊",
 		category: "info",
