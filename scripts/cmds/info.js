@@ -4,8 +4,8 @@ const path = require("path");
 
 module.exports = {
   config: {
-    name: "intro",
-    aliases: ["intro"],
+    name: "info",
+    aliases: ["info"],
     version: "1.3.0",
     author: "Anik Islam Sadik",
     role: 0,
