@@ -9,7 +9,7 @@ process.stdout.clearLine = process.stdout.clearLine || function () {};
 module.exports = {
   config: {
     name: "uptime4",
-    aliases: ["runtime", "up2"],
+    aliases: ["runtime", "up4"],
     version: "1.10",
     author: "NZ R",
     countDown: 5,
