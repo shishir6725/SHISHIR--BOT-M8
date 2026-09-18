@@ -1,77 +1,126 @@
-const fs = require("fs");
-const moment = require("moment-timezone");
+const axios = require("axios");
 
 module.exports = {
   config: {
     name: "info",
-    aliases: ["admininfo", "botinfo", "shishir", "ownerinfo"],
-    version: "1.4",
-    author: "亗 𝐒𝐡𝐢𝐬𝐡𝐢𝐫 ×͜×",
+    version: "4.0",
+    author: "SHISHIR",
     countDown: 5,
     role: 0,
-    shortDescription: { en: "Show bot & owner info" },
-    longDescription: { en: "Display detailed information about the bot and owner" },
-    category: "owner",
-    guide: { en: "{pn}" }
+
+    shortDescription: {
+      en: "Show premium owner information"
+    },
+
+    longDescription: {
+      en: "Display complete owner, social and bot information"
+    },
+
+    category: "info",
+
+    guide: {
+      en: "{pn}"
+    }
   },
 
   onStart: async function ({ message }) {
 
-    // OWNER INFO
-    const authorName = "×᷼×𝗔𝗵𝗺𝗲𝗱 𝗦𝗵𝗶𝘀𝗵𝗶𝗿☆";
-    const ownAge = "17+";
-    const messenger = "https://m.me/shishir.8192";
-    const authorFB = "𝐒𝐡𝐢𝐬𝐡𝐢𝐫 Bb'z";
-    const authorNumber = "+88017493---26";
-    const Status = "Single";
+    // ╔══════════════════════════════════════╗
+    // ║       🎬 FIXED INFO VIDEO            ║
+    // ╚══════════════════════════════════════╝
+    // এখানে তোমার DIRECT .mp4 VIDEO LINK বসাও
+    const videoUrl = "https://i.imgur.com/Y5TrlXZ.jpeg";
 
-    // SAFE CATBOX VIDEO LINK
-    const videoLink = "https://files.catbox.moe/a03xbs.mp4";
+    const info = `
+╔══════════════════════════════════════╗
+║                                      ║
+║       𓆩 𝐒𝐇𝐈𝐒𝐇𝐈𝐑 𝐏𝐑𝐎𝐅𝐈𝐋𝐄 𓆪       ║
+║          ⟡ 𝐎𝐖𝐍𝐄𝐑 𝐈𝐍𝐅𝐎 ⟡          ║
+║                                      ║
+╚══════════════════════════════════════╝
 
-    // BANGLADESH TIME
-    const now = moment().tz("Asia/Dhaka");
-    const date = now.format("MMMM Do YYYY");
-    const time = now.format("h:mm:ss A");
+          ┌─「 👑 𝐏𝐄𝐑𝐒𝐎𝐍𝐀 」─┐
+          │
+          │  𓆩⚡𓆪 𝐍𝐚𝐦𝐞
+          │      ➜ 𝐒𝐇𝐈𝐒𝐇𝐈𝐑
+          │
+          │  𓆩🎂𓆪 𝐀𝐠𝐞
+          │      ➜ 𝟏𝟕 𝐘𝐞𝐚𝐫𝐬 𝐎𝐥𝐝
+          │
+          │  𓆩🎓𓆪 𝐒𝐭𝐚𝐭𝐮𝐬
+          │      ➜ 𝐒𝐭𝐮𝐝𝐞𝐧𝐭
+          │
+          │  𓆩📍𓆪 𝐋𝐨𝐜𝐚𝐭𝐢𝐨𝐧
+          │      ➜ 𝐃𝐡𝐚𝐤𝐚, 𝐁𝐚𝐧𝐠𝐥𝐚𝐝𝐞𝐬𝐡 🇧🇩
+          │
+          └───────────────────┘
 
-    // BOT UPTIME
-    const uptime = process.uptime();
-    const seconds = Math.floor(uptime % 60);
-    const minutes = Math.floor((uptime / 60) % 60);
-    const hours = Math.floor((uptime / 3600) % 24);
-    const days = Math.floor(uptime / 86400);
+╭───────────「 🌐 𝐒𝐎𝐂𝐈𝐀𝐋 」───────────╮
+│
+│  🟦 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤
+│  └─➜ 𝐒𝐇𝐈𝐒𝐇𝐈𝐑
+│
+│  🎵 𝐓𝐢𝐤𝐓𝐨𝐤
+│  └─➜ @𝐭𝐢𝐤𝐭𝐢𝐤 𝐱𝐮𝐝𝐚𝐢 𝐧𝐚🏝️
+│
+│  📸 𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦
+│  └─➜ @𝐀𝐡𝐦𝐞𝐃'𝐳 𝐒𝐇𝐈'𝐒𝐇𝐈𝐑
+│
+╰─────────────────────────────────────╯
 
-    const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+╔════════「 🤖 𝐁𝐎𝐓 𝐒𝐘𝐒𝐓𝐄𝐌 」════════╗
+║
+║  ⟡ 𝐁𝐨𝐭 𝐍𝐚𝐦𝐞
+║     └─➜ 𝐒𝐇𝐈𝐒𝐇𝐈𝐑-𝐁𝐎𝐓
+║
+║  ⟡ 𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫
+║     └─➜ 𝐒𝐇𝐈𝐒𝐇𝐈𝐑
+║
+║  ⟡ 𝐄𝐧𝐠𝐢𝐧𝐞
+║     └─➜ 𝐆𝐨𝐚𝐭𝐁𝐨𝐭 / 𝐍𝐨𝐝𝐞.𝐉𝐒
+║
+║  ⟡ 𝐌𝐨𝐝𝐞
+║     └─➜ 🟢 𝐎𝐍𝐋𝐈𝐍𝐄
+║
+║  ⟡ 𝐕𝐞𝐫𝐬𝐢𝐨𝐧
+║     └─➜ 𝟒.𝟎
+║
+╚══════════════════════════════════════╝
 
-    const text =
-`✨《 BOT & OWNER INFORMATION 》🎀
+╭──────────「 ⚡ 𝐏𝐎𝐖𝐄𝐑 」──────────╮
+│
+│  ✦ 𝐀𝐈 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬
+│  ✦ 𝐌𝐮𝐬𝐢𝐜 & 𝐌𝐞𝐝𝐢𝐚
+│  ✦ 𝐅𝐮𝐧 & 𝐆𝐚𝐦𝐞𝐬
+│  ✦ 𝐆𝐫𝐨𝐮𝐩 𝐌𝐚𝐧𝐚𝐠𝐞𝐦𝐞𝐧𝐭
+│  ✦ 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐨𝐧
+│  ✦ 𝐌𝐮𝐥𝐭𝐢𝐩𝐥𝐞 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬
+│
+╰──────────────────────────────────╯
 
-🤖 Bot Name: ${global.GoatBot.config.nickNameBot}
-👾 Prefix: ${global.GoatBot.config.prefix}
+        ╭────────────────────╮
+        │  𓆩🖤𓆪 𝐒𝐇𝐈𝐒𝐇𝐈𝐑 𝐂𝐎𝐃𝐄 𓆪 │
+        │  ⚡ 𝐌𝐚𝐝𝐞 𝐖𝐢𝐭𝐡 𝐂𝐨𝐝𝐞   │
+        │  💫 𝐊𝐞𝐞𝐩 𝐂𝐚𝐥𝐦 & 𝐂𝐨𝐝𝐞 │
+        ╰────────────────────╯
 
-💙 Owner Name: ${authorName}
-📝 Age: ${ownAge}
-💕 Relationship: ${Status}
+╔══════════════════════════════════════╗
+║     『 𝐍𝐎𝐓 𝐉𝐔𝐒𝐓 𝐀 𝐁𝐎𝐓 — 𝐈𝐓'𝐒 𝐀 𝐕𝐈𝐁𝐄 』     ║
+╚══════════════════════════════════════╝
+`;
 
-📞 WhatsApp: ${authorNumber}
-🌍 Facebook: ${authorFB}
+    try {
+      const response = await axios.get(videoUrl, {
+        responseType: "stream"
+      });
 
-🗓 Date: ${date}
-⏰ Time: ${time}
+      return message.reply({
+        body: info,
+        attachment: response.data
+      });
 
-🔰 Contact Owner: ${messenger}
-📛 Bot Uptime: ${uptimeString}
-
-==============================`;
-
-    return message.reply({
-      body: text,
-      attachment: await global.utils.getStreamFromURL(videoLink)
-    });
-  },
-
-  onChat: async function ({ event, message }) {
-    if (event.body?.toLowerCase() === "info") {
-      return this.onStart({ message });
+    } catch (error) {
+      return message.reply(info);
     }
   }
 };
