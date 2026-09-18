@@ -1,186 +1,166 @@
-const os = require("os");
+const axios = require("axios");
+const fs = require("fs-extra");
 const path = require("path");
-const fs = require("fs");
-const { createCanvas } = require("canvas");
-
-process.stderr.clearLine = process.stderr.clearLine || function () {};
-process.stdout.clearLine = process.stdout.clearLine || function () {};
+const os = require("os");
+const { createCanvas, loadImage } = require("canvas");
+const moment = require("moment-timezone");
 
 module.exports = {
-  config: {
-    name: "uptime4",
-    aliases: ["runtime", "up4"],
-    version: "1.10",
-    author: "NZ R",
-    countDown: 5,
-    role: 0,
-    shortDescription: { en: "Check system uptime and status with image" },
-    longDescription: { en: "Displays the system uptime, RAM usage, CPU load, and other server details on an image." },
-    category: "SYSTEM",
-    guide: { en: "{pn}" }
-  },
+config: {
+name: "up4",
+aliases: ["uptime4", "Up4"],
+version: "22.0.0",
+author: "MR_FARHAN",
+countDown: 5,
+role: 0,
+category: "system",
+description: "Admin: No Prefix (61592841571046) | User: With Prefix",
+usePrefix: true
+},
 
-  onStart: async function ({ api, event }) {
-    const { threadID, messageID } = event;
-    const cacheFolderPath = path.join(__dirname, "cache");
-    if (!fs.existsSync(cacheFolderPath)) fs.mkdirSync(cacheFolderPath, { recursive: true });
-    const imagePath = path.join(cacheFolderPath, `uptime_${Date.now()}.png`);
+onStart: async function ({ api, event, args }) {
+// onStart ekhon shudhu prefix wala command handle korbe (Normal users)
+return this.handleUptime({ api, event });
+},
 
-    try {
-      api.setMessageReaction("🛡️", event.messageID, () => {}, true);
+onChat: async function ({ api, event }) {
+const { body, senderID } = event;
+if (!body) return;
 
-      const uptime = process.uptime();
-      const days = Math.floor(uptime / 86400);
-      const hours = Math.floor((uptime % 86400) / 3600);
-      const minutes = Math.floor((uptime % 3600) / 60);
-      const seconds = Math.floor(uptime % 60);
-      const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+// Hardcoded Admin UID check for No Prefix
+const adminUID = "61588452928616";
+const msg = body.toLowerCase();
 
-      const totalMem = os.totalmem();
-      const freeMem = os.freemem();
-      const usedMem = totalMem - freeMem;
-      const usedGB = (usedMem / 1024 / 1024 / 1024).toFixed(2);
-      const totalGB = (totalMem / 1024 / 1024 / 1024).toFixed(2);
+if (senderID == adminUID && (msg == "up" || msg == "uptime")) {
+return this.handleUptime({ api, event });
+}
+},
 
-      const cpus = os.cpus();
-      let totalIdle = 0, totalTick = 0;
-      cpus.forEach(cpu => {
-        for (const type in cpu.times) totalTick += cpu.times[type];
-        totalIdle += cpu.times.idle;
-      });
-      const avgCpuLoad = ((1 - totalIdle / totalTick) * 100).toFixed(2);
+handleUptime: async function ({ api, event }) {
+const { threadID, messageID, senderID } = event;
 
-      const ping = Date.now() - event.timestamp;
-      const platform = `${os.platform()} (${os.arch()})`;
-      const nodeVersion = process.version;
-      const hostname = os.hostname();
+// STEP 1: Sending Checking Message
+const sendChecking = await api.sendMessage("🔍 Checking system status, please wait...", threadID);
 
-      const info = [
-        { label: "Uptime", value: uptimeString },
-        { label: "Ping", value: `${ping} ms` },
-        { label: "RAM Usage", value: `${usedGB} GB / ${totalGB} GB` },
-        { label: "CPU Load", value: `${avgCpuLoad}%` },
-        { label: "Platform", value: platform },
-        { label: "Node.js", value: nodeVersion },
-        { label: "Hostname", value: hostname }
-      ];
+const timeStart = Date.now();
+const uptime = process.uptime();
+const hours = Math.floor(uptime / 3600);
+const minutes = Math.floor((uptime % 3600) / 60);
+const timeString = `${hours}h ${minutes}m`;
 
-      const width = 1400;
-      const height = 800;
-      const canvas = createCanvas(width, height);
-      const ctx = canvas.getContext('2d');
+const usedMem = ((os.totalmem() - os.freemem()) / (1024 ** 3)).toFixed(1);
+const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(1);
+const ramPercentage = ((usedMem / totalMem) * 100).toFixed(0);
+const currentDate = moment.tz("Asia/Dhaka").format("DD/MM/YYYY");
 
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#181825');
-      gradient.addColorStop(1, '#0a0a10');
-      
-      const rx = 60, ry = 60;
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.moveTo(rx, 0);
-      ctx.lineTo(width - rx, 0);
-      ctx.quadraticCurveTo(width, 0, width, ry);
-      ctx.lineTo(width, height - ry);
-      ctx.quadraticCurveTo(width, height, width - rx, height);
-      ctx.lineTo(rx, height);
-      ctx.quadraticCurveTo(0, height, 0, height - ry);
-      ctx.lineTo(0, ry);
-      ctx.quadraticCurveTo(0, 0, rx, 0);
-      ctx.closePath();
-      ctx.fill();
+let userName = "User";
+try {
+const info = await api.getUserInfo(senderID);
+userName = info[senderID].name;
+} catch (e) { userName = "Developer"; }
 
-      const infoBoxWidth = 1260;
-      const infoBoxHeight = 610;
-      const infoBoxX = (width - infoBoxWidth) / 2;
-      const infoBoxY = (height - infoBoxHeight) / 2;
-      const infoBoxRx = 70, infoBoxRy = 70;
+const imgUrl = "https://i.imgur.com/TDkyAdv.jpeg";
+const userImgUrl = `https://graph.facebook.com/${senderID}/picture?width=512&height=512&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+const cachePath = path.join(__dirname, "cache", `up_milon_final_${Date.now()}.png`);
 
-      ctx.shadowColor = 'rgba(44, 39, 66, 0.8)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 5;
+try {
+if (!fs.existsSync(path.join(__dirname, "cache"))) fs.ensureDirSync(path.join(__dirname, "cache"));
 
-      ctx.fillStyle = 'rgba(21, 21, 32, 0.98)';
-      ctx.beginPath();
-      ctx.moveTo(infoBoxX + infoBoxRx, infoBoxY);
-      ctx.lineTo(infoBoxX + infoBoxWidth - infoBoxRx, infoBoxY);
-      ctx.quadraticCurveTo(infoBoxX + infoBoxWidth, infoBoxY, infoBoxX + infoBoxWidth, infoBoxY + infoBoxRy);
-      ctx.lineTo(infoBoxX + infoBoxWidth, infoBoxY + infoBoxHeight - infoBoxRy);
-      ctx.quadraticCurveTo(infoBoxX + infoBoxWidth, infoBoxY + infoBoxHeight, infoBoxX + infoBoxWidth - infoBoxRx, infoBoxY + infoBoxHeight);
-      ctx.lineTo(infoBoxX + infoBoxRx, infoBoxY + infoBoxHeight);
-      ctx.quadraticCurveTo(infoBoxX, infoBoxY + infoBoxHeight, infoBoxX, infoBoxY + infoBoxHeight - infoBoxRy);
-      ctx.lineTo(infoBoxX, infoBoxY + infoBoxRy);
-      ctx.quadraticCurveTo(infoBoxX, infoBoxY, infoBoxX + infoBoxRx, infoBoxY);
-      ctx.closePath();
-      ctx.fill();
+const image = await loadImage(imgUrl);
+const canvas = createCanvas(image.width, image.height);
+const ctx = canvas.getContext("2d");
+ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
 
-      const centerX = width / 2;
-      const centerY = height / 2;
-      
-      const radialGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 160);
-      radialGradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
-      radialGradient.addColorStop(0.7, 'rgba(139, 92, 246, 0)');
-      radialGradient.addColorStop(1, 'transparent'); 
-      
-      ctx.fillStyle = radialGradient;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 160, 0, Math.PI * 2);
-      ctx.fill();
+// --- USER PROFILE (Box 220x220) ---
+const boxSize = 220;
+const boxX = centerX - (boxSize / 2);
+const boxY = centerY - (boxSize / 2) + 15;
 
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.6)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 130, 0, Math.PI * 2);
-      ctx.stroke();
+try {
+const userImg = await loadImage(userImgUrl);
+ctx.shadowColor = "#00ffff";
+ctx.shadowBlur = 25;
+ctx.strokeStyle = "#ffffff";
+ctx.lineWidth = 5;
+ctx.strokeRect(boxX, boxY, boxSize, boxSize);
+ctx.shadowBlur = 0; 
+ctx.drawImage(userImg, boxX, boxY, boxSize, boxSize);
 
-      ctx.strokeStyle = 'rgba(167, 139, 250, 0.4)';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 100, 0, Math.PI * 2);
-      ctx.stroke();
+ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+ctx.fillRect(boxX, boxY + boxSize - 35, boxSize, 35);
+ctx.textAlign = "center";
+ctx.fillStyle = "#ffffff";
+ctx.font = "bold 16px Arial";
+ctx.fillText(userName.toUpperCase(), centerX, boxY + boxSize - 12);
+} catch (err) { console.log("Image load failed"); }
 
-      ctx.font = '500 40px sans-serif';
-      
-      const startY = infoBoxY + 120;
+// --- Circles ---
+const drawCircle = (x, y, radius, percent, label, value, color) => {
+ctx.beginPath();
+ctx.arc(x, y, radius, 0, Math.PI * 2);
+ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+ctx.lineWidth = 10; ctx.stroke();
+ctx.beginPath();
+ctx.arc(x, y, radius, -Math.PI / 2, (-Math.PI / 2) + (Math.PI * 2 * (percent / 100)));
+ctx.strokeStyle = color;
+ctx.lineWidth = 10; ctx.lineCap = "round"; ctx.stroke();
+ctx.textAlign = "center"; ctx.fillStyle = "#ffffff";
+ctx.font = "bold 20px Arial"; ctx.fillText(value, x, y + 8);
+ctx.font = "14px Arial"; ctx.fillText(label, x, y + 35);
+};
 
-      info.forEach((item, i) => {
-        const yPos = startY + i * 75;
+const uptimeX = boxX - 110;
+const ramX = boxX + boxSize + 110;
+drawCircle(uptimeX, centerY + 30, 60, 75, "UPTIME", timeString, "#00ffcc");
+drawCircle(ramX, centerY - 40, 60, ramPercentage, "RAM", `${ramPercentage}%`, "#ff3366");
+const pingMS = Date.now() - timeStart;
+drawCircle(ramX, centerY + 90, 50, 80, "PING", `${pingMS}ms`, "#ffff00");
 
-        ctx.fillStyle = '#d1c4e9';
-        ctx.textAlign = 'left';
-        ctx.fillText(item.label, 160, yPos);
+// Footer
+ctx.textAlign = "center";
+ctx.font = "bold 24px Arial";
+ctx.fillStyle = "#00ff00";
+ctx.fillText("● SYSTEM STATUS: ACTIVE", centerX, canvas.height - 65);
+ctx.font = "italic bold 18px Arial"; 
+ctx.fillStyle = "#FFD700"; 
+ctx.fillText("DEVELOPED BY:-AhmeD'z SHI'SHIR ", centerX, canvas.height - 95);
 
-        ctx.fillStyle = '#e0e0f4';
-        ctx.fillText(item.value, 600, yPos);
+// Bot Name & Date
+ctx.textAlign = "left";
+ctx.font = "bold 30px Arial";
+ctx.shadowColor = "#0000ff"; ctx.shadowBlur = 15;
+ctx.fillStyle = "#33ccff";
+ctx.fillText("[SHISHIR-BOT]", 199, 128); 
 
-        ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(160, yPos + 28);
-        ctx.lineTo(1240, yPos + 28);
-        ctx.stroke();
-      });
+const dateX = centerX + 82;
+const dateY = 120; 
+ctx.shadowBlur = 20; ctx.shadowColor = "#FF00FF";
+ctx.textAlign = "center";
+ctx.font = "bold 22px Arial";
+const gradient = ctx.createLinearGradient(dateX - 70, dateY, dateX + 70, dateY);
+gradient.addColorStop(0, "#FF0000"); gradient.addColorStop(0.5, "#00FF00"); gradient.addColorStop(1, "#0000FF");
+ctx.fillStyle = "#FFFFFF"; 
+ctx.fillText(`| ${currentDate}`, dateX, dateY);
+ctx.shadowBlur = 0;
+ctx.strokeStyle = gradient; ctx.lineWidth = 1.5;
+ctx.strokeText(`| ${currentDate}`, dateX, dateY);
 
-      const out = fs.createWriteStream(imagePath);
-      const stream = canvas.createPNGStream();
-      stream.pipe(out);
+const buffer = canvas.toBuffer("image/png");
+fs.writeFileSync(cachePath, buffer);
 
-      out.on('finish', () => {
-        api.setMessageReaction("✅", event.messageID, () => {}, true);
-        api.sendMessage({ attachment: fs.createReadStream(imagePath) }, threadID, (err) => {
-          if (!err) fs.unlink(imagePath, () => {});
-          else {
-            if (fs.existsSync(imagePath)) fs.unlink(imagePath, () => {});
-          }
-        }, messageID);
-      });
+// STEP 2: Send & Delete Checking
+return api.sendMessage({ attachment: fs.createReadStream(cachePath) }, threadID, async (err) => {
+if (!err) api.unsendMessage(sendChecking.messageID);
+if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+}, messageID);
 
-    } catch (error) {
-      api.setMessageReaction("❌", event.messageID, () => {}, true);
-      if (fs.existsSync(imagePath)) fs.unlink(imagePath, () => {});
-    }
-  }
+} catch (e) {
+console.error(e);
+api.unsendMessage(sendChecking.messageID);
+return api.sendMessage("❌ Error generating status!", threadID, messageID);
+}
+}
 };
