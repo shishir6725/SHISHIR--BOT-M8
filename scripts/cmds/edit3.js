@@ -2,110 +2,85 @@ const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
 
-const BASE_URL = "https://meta.nkx.lol";
-const MAX_ATTACHMENT_BYTES = 26214400;
-
-function formatError(res) {
-  if (res.status === 422 && Array.isArray(res.data?.detail)) {
-    return res.data.detail.map((d) => d.msg || d).join("; ");
-  }
-  if (res.status === 401) return "The API server rejected its own API key. Check the server's API_KEY config.";
-  if (res.status === 404) return "That project/image could not be found.";
-  if (res.status === 502) return "The Vibes provider failed to fulfill this request. Try again.";
-  if (res.status === 503) return "The API server's Vibes session is misconfigured (vibes.txt missing or invalid).";
-  return res.data?.message || res.data?.error || `Request failed (status ${res.status}).`;
-}
-
-function extractEditedImageUrl(data) {
-  const contentItem = data?.result?.contentItem;
-  return contentItem?.imageUrl || contentItem?.structuredOutput?.image || null;
-}
-
-function extractImageUrlFromEvent(event) {
-  const sources = [event.messageReply?.attachments, event.attachments];
-  for (const attachments of sources) {
-    if (!Array.isArray(attachments)) continue;
-    const photo = attachments.find((a) => a.type === "photo" || a.type === "sticker");
-    if (photo) {
-      const url = photo.url || photo.largePreviewUrl || photo.previewUrl;
-      if (url) return url;
-    }
-  }
-  return null;
-}
-
-async function downloadToBuffer(fileUrl) {
-  const res = await axios.get(fileUrl, {
-    responseType: "arraybuffer",
-    timeout: 60000,
-    maxContentLength: MAX_ATTACHMENT_BYTES,
-    maxBodyLength: MAX_ATTACHMENT_BYTES,
-    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
-  });
-  return Buffer.from(res.data);
-}
-
 module.exports = {
   config: {
     name: "edit3",
-    aliases: ["editimg3", "imgedit"],
-    version: "1.0",
-    author: "Neoaz 🐊",
-    countDown: 5,
+    aliases: ["nedit", "edit3"],
+    version: "1.6",
+    author: "FARHAN-KHAN",
+    countDown: 15,
     role: 0,
-    shortDescription: { en: "AI image-to-image editing" },
-    longDescription: { en: "Reply to an image with an edit instruction to transform it." },
-    category: "ai",
-    guide: { en: "(reply to an image) {pn} <edit prompt>" }
+    shortDescription: { en: "Edit image with Nano AI" },
+    longDescription: { en: "Edit image using Nano AI with enhanced stability" },
+    category: "image",
+    guide: {
+      en: "{pn} <prompt> --ratio <1:1|4:3|3:2|16:9>"
+    }
   },
 
-  onStart: async function ({ message, args, event, api }) {
-    const prompt = args.join(" ");
-    const imageUrl = extractImageUrlFromEvent(event);
+  onStart: async function ({ message, event, api, args }) {
+    const hasPhotoReply = event.type === "message_reply" && event.messageReply?.attachments?.[0]?.type === "photo";
 
-    if (!imageUrl) return message.reply("Reply to an image with this command to edit it.");
-    if (!prompt) return message.reply("Usage: (reply to an image) {pn} <edit prompt>");
+    if (!hasPhotoReply) {
+      return message.reply("Please reply to an image to edit.");
+    }
 
-    api.setMessageReaction("⏳", event.messageID);
+    const input = args.join(" ");
+    if (!input) return message.reply("Please provide a prompt.");
+
+    const ratioMatch = input.match(/--ratio\s+(1:1|4:3|3:2|16:9)/);
+    const ratio = ratioMatch ? ratioMatch[1] : "1:1";
+    const prompt = input.replace(/--ratio\s+(1:1|4:3|3:2|16:9)/, "").trim();
+
+    const imageUrl = event.messageReply.attachments[0].url;
+    const cacheDir = path.join(__dirname, "cache");
+    const cachePath = path.join(cacheDir, `edit_${Date.now()}.png`);
 
     try {
-      const res = await axios.post(`${BASE_URL}/v1/images/edit`, {
-        image_url: imageUrl,
-        prompt,
-        project_name: "Goatbot image edit"
-      }, {
-        timeout: 120000,
-        validateStatus: () => true
+      api.setMessageReaction("⏳", event.messageID, () => {}, true);
+
+      const res = await axios.get("https://rifatapiv3.vercel.app/api/ai-image/nano", {
+        params: { 
+          url: imageUrl, 
+          p: prompt,
+          ratio: ratio
+        },
+        timeout: 180000
       });
 
-      if (res.status >= 400) {
-        api.setMessageReaction("❌", event.messageID);
-        return message.reply(formatError(res));
+      const resultUrl = res.data?.result;
+
+      if (!resultUrl || res.data.status !== "success") {
+        api.setMessageReaction("❌", event.messageID, () => {}, true);
+        return message.reply("Failed to edit image. Server might be busy.");
       }
 
-      const editedUrl = extractEditedImageUrl(res.data);
-      if (!editedUrl) {
-        api.setMessageReaction("❌", event.messageID);
-        return message.reply("No image URL was found in the API's response.");
-      }
-
-      const cacheDir = path.join(__dirname, "cache");
       await fs.ensureDir(cacheDir);
-      const filePath = path.join(cacheDir, `edit_${Date.now()}.jpg`);
-      const buffer = await downloadToBuffer(editedUrl);
-      await fs.writeFile(filePath, buffer);
+
+      const imageRes = await axios.get(resultUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+        }
+      });
+
+      await fs.writeFile(cachePath, Buffer.from(imageRes.data));
+
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
 
       await message.reply({
-        body: "Here's your edited image.",
-        attachment: fs.createReadStream(filePath)
+        body: `Prompt: ${prompt}\nRatio: ${ratio}`,
+        attachment: fs.createReadStream(cachePath)
       });
 
-      api.setMessageReaction("✅", event.messageID);
-      fs.remove(filePath).catch(() => {});
-    } catch (e) {
-      console.error("[EDIT COMMAND ERROR]:", e?.response?.data || e.message || e);
-      api.setMessageReaction("❌", event.messageID);
-      message.reply("An error occurred while editing the image.");
+    } catch (err) {
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
+      const errorDetail = err.response?.status === 500 ? "API Server Error (500)" : err.message;
+      return message.reply(`Error: ${errorDetail}`);
+    } finally {
+      if (fs.existsSync(cachePath)) {
+        setTimeout(() => fs.remove(cachePath).catch(() => {}), 10000);
+      }
     }
   }
 };
