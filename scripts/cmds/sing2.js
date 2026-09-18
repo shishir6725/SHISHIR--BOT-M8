@@ -1,56 +1,83 @@
-const axios = require("axios");
-
-const mahmud = async () => {
-  const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-  return base.data.mahmud;
-};
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
-    config: {
-        name: "sing2",
-        version: "1.7",
-        author: "MahMUD", 
-        countDown: 10,
-        role: 0,
-        category: "music",
-        guide: "{p}sing mood"
-    },
+  config: {
+    name: 'sing2',
+    author: 'MR_FARHAN',
+    usePrefix: false,
+    category: 'Youtube Song Downloader'
+  },
+  onStart: async ({ event, api, args, message }) => {
+    try {
+      const query = args.join(' ');
+      if (!query) return message.reply('Please provide a search query!');
+      
+      const searchResponse = await axios.get(`https://mostakim.onrender.com/mostakim/ytSearch?search=${encodeURIComponent(query)}`);
+      api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
-    onStart: async function ({ api, event, args, message }) {
-        if (args.length === 0) {
-            return message.reply("❌ | Please provide a sing name\n\nExample: sing moye moye");
+      const parseDuration = (timestamp) => {
+        const parts = timestamp.split(':').map(part => parseInt(part));
+        let seconds = 0;
+
+        if (parts.length === 3) {
+          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) {
+          seconds = parts[0] * 60 + parts[1];
         }
 
+        return seconds;
+      };
+
+      const filteredVideos = searchResponse.data.filter(video => {
         try {
-            const query = encodeURIComponent(args.join(" "));
-            const apiUrl = `${await mahmud()}/api/sing?q=${query}`;
-
-            const response = await axios.get(apiUrl, {
-                responseType: "stream",
-                headers: { "author": module.exports.config.author }
-            });
-
-            console.log("Response:", response);
-
-            if (response.data.error) {
-                return message.reply(`${response.data.error}`);
-            }
-
-            message.reply({
-                body: `✅ | 𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐬𝐨𝐧𝐠: ${args.join(" ")}`,
-                attachment: response.data
-            });
-
-        } catch (error) {
-            console.error("Error:", error.message);
-
-            if (error.response) {
-                console.error("Response error data:", error.response.data);
-                console.error("Response status:", error.response.status);
-                return message.reply(`${error.response.data.error || error.message}`);
-            }
-
-            message.reply("error🥺");
+          const totalSeconds = parseDuration(video.timestamp);
+          return totalSeconds < 600;
+        } catch {
+          return false;
         }
+      });
+
+      if (filteredVideos.length === 0) {
+        return message.reply('No short videos found (under 10 minutes)!');
+      }
+
+      const selectedVideo = filteredVideos[0];
+      const tempFilePath = path.join(__dirname, 'temp_audio.m4a');
+      const apiResponse = await axios.get(`https://mostakim.onrender.com/m/sing?url=${selectedVideo.url}`);
+      
+      if (!apiResponse.data.url) {
+        throw new Error('No audio URL found in response');
+      }
+
+      const writer = fs.createWriteStream(tempFilePath);
+      const audioResponse = await axios({
+        url: apiResponse.data.url,
+        method: 'GET',
+        responseType: 'stream'
+      });
+
+      audioResponse.data.pipe(writer);
+      
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
+
+      await message.reply({
+        body: `🎧 Now playing: ${selectedVideo.title}\nDuration: ${selectedVideo.timestamp}`,
+        attachment: fs.createReadStream(tempFilePath)
+      });
+
+      fs.unlink(tempFilePath, (err) => {
+        if (err) message.reply(`Error deleting temp file: ${err.message}`);
+      });
+
+    } catch (error) {
+      message.reply(`Error: ${error.message}`);
     }
+  }
 };
