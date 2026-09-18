@@ -1,106 +1,209 @@
+
 const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
 
 const baseApiUrl = async () => {
-        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-        return base.data.mahmud;
+  const response = await axios.get(
+    "https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json",
+    { timeout: 15000 }
+  );
+
+  if (!response.data || !response.data.mahmud) {
+    throw new Error("Base API URL not found");
+  }
+
+  return String(response.data.mahmud).replace(/\/+$/, "");
 };
 
 module.exports = {
-        config: {
-                name: "tikedit",
-                version: "1.7",
-                author: "MahMUD",
-                countDown: 10,
-                role: 0,
-                description: {
-                        bn: "টিকটক থেকে যেকোনো এডিট ভিডিও সার্চ করে ডাউনলোড করুন",
-                        en: "Search and download any edit video from TikTok",
-                        vi: "Tìm kiếm và tải xuống bất kỳ video chỉnh sửa nào từ TikTok"
-                },
-                category: "media",
-                guide: {
-                        bn: '   {pn} <নাম>: (যেমন: {pn} naruto edit)',
-                        en: '   {pn} <keyword>: (Ex: {pn} naruto edit)',
-                        vi: '   {pn} <từ khóa>: (VD: {pn} naruto edit)'
-                }
-        },
+  config: {
+    name: "tikedit",
+    version: "3.0",
+    author: "𝑺𝑯𝑰𝑺𝑯𝑰𝑹",
+    countDown: 10,
+    role: 0,
+    description: {
+      en: "𝑺𝒆𝒂𝒓𝒄𝒉 𝒂𝒏𝒅 𝒅𝒐𝒘𝒏𝒍𝒐𝒂𝒅 𝑻𝒊𝒌𝑻𝒐𝒌 𝒆𝒅𝒊𝒕𝒔"
+    },
+    category: "media",
+    guide: {
+      en: "{pn} naruto edit"
+    }
+  },
 
-        langs: {
-                bn: {
-                        noInput: "× বেবি, কী ভিডিও খুঁজছো? নাম দাও! 🔍\nউদাহরণ: {pn} naruto edit",
-                        tooLarge: "× ভিডিওটি ২৫ মেগাবাইটের বেশি বড়, তাই পাঠানো সম্ভব হয়নি।",
-                        success: "🎬 | আপনার জন্য \"%1\" এর ভিডিও এখানে রয়েছে:",
-                        error: "× সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।"
-                },
-                en: {
-                        noInput: "× Baby, please provide a search keyword! 🔍\nExample: {pn} naruto edit",
-                        tooLarge: "× The video is larger than 25MB. Cannot send.",
-                        success: "🎬 | Here's your TikTok edit for \"%1\":",
-                        error: "× API error: %1. Contact MahMUD for help."
-                },
-                vi: {
-                        noInput: "× Cưng ơi, hãy nhập từ khóa tìm kiếm! 🔍\nVD: {pn} naruto edit",
-                        tooLarge: "× Video lớn hơn 25MB. Không thể gửi.",
-                        success: "🎬 | Đây là video TikTok cho \"%1\":",
-                        error: "× Lỗi: %1. Liên hệ MahMUD để hỗ trợ."
-                }
-        },
+  langs: {
+    en: {
+      noInput:
+        "╭━━━〔 𝑻𝑰𝑲𝑬𝑫𝑰𝑻 〕━━━╮\n" +
+        "┃ ⚠️ 𝑬𝒏𝒕𝒆𝒓 𝒂 𝒔𝒆𝒂𝒓𝒄𝒉 𝒌𝒆𝒚𝒘𝒐𝒓𝒅!\n" +
+        "┃ 📌 𝑬𝒙𝒂𝒎𝒑𝒍𝒆: tikedit naruto edit\n" +
+        "╰━━━━━━━━━━━━━━━━━━╯",
+      tooLarge:
+        "❌ 𝑽𝒊𝒅𝒆𝒐 𝒊𝒔 𝒍𝒂𝒓𝒈𝒆𝒓 𝒕𝒉𝒂𝒏 25 MB!",
+      success:
+        "╭━━━〔 🎬 𝑻𝑰𝑲𝑬𝑫𝑰𝑻 〕━━━╮\n" +
+        "┃ 🔎 𝑸𝒖𝒆𝒓𝒚: %1\n" +
+        "┃\n" +
+        "┃ ✅ 𝑫𝒐𝒘𝒏𝒍𝒐𝒂𝒅 𝑪𝒐𝒎𝒑𝒍𝒆𝒕𝒆!\n" +
+        "┃ ✨ 𝑷𝒐𝒘𝒆𝒓𝒆𝒅 𝒃𝒚 𝑺𝑯𝑰𝑺𝑯𝑰𝑹\n" +
+        "╰━━━━━━━━━━━━━━━━━━╯",
+      error: "❌ 𝑬𝒓𝒓𝒐𝒓: %1"
+    }
+  },
 
-        onStart: async function ({ api, event, args, message, getLang }) {
-                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68);
-                if (this.config.author !== authorName) {
-                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
-                }
+  onStart: async function ({ api, event, args, message, getLang }) {
+    const keyword = args.join(" ").trim();
 
-                const keyword = args.join(" ");
-                if (!keyword) return message.reply(getLang("noInput"));
+    if (!keyword) {
+      return message.reply(getLang("noInput"));
+    }
 
-                const cacheDir = path.join(__dirname, "cache");
-                if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-                const videoPath = path.join(cacheDir, `tik_${Date.now()}.mp4`);
+    const cacheDir = path.join(__dirname, "cache");
+    await fs.ensureDir(cacheDir);
 
-                try {
-                        
-                        api.setMessageReaction("⌛", event.messageID, () => {}, true);
+    const videoPath = path.join(
+      cacheDir,
+      `tikedit_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 8)}.mp4`
+    );
 
-                        const baseUrl = await baseApiUrl();
-                        const response = await axios({
-                                method: 'GET',
-                                url: `${baseUrl}/api/tiksr`,
-                                params: { sr: keyword },
-                                responseType: 'stream'
-                        });
+    try {
+      api.setMessageReaction(
+        "⌛",
+        event.messageID,
+        () => {},
+        true
+      );
 
-                        const writer = fs.createWriteStream(videoPath);
-                        response.data.pipe(writer);
+      const baseUrl = await baseApiUrl();
 
-                        await new Promise((resolve, reject) => {
-                                writer.on('finish', resolve);
-                                writer.on('error', reject);
-                        });
+      console.log("TikEdit API:", `${baseUrl}/api/tiksr`);
+      console.log("TikEdit Query:", keyword);
 
-                        const stats = fs.statSync(videoPath);
-                        if (stats.size > 26214400) { 
-                                api.setMessageReaction("❌", event.messageID, () => {}, true);
-                                if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
-                                return message.reply(getLang("tooLarge"));
-                        }
-
-                        await message.reply({
-                                body: getLang("success", keyword),
-                                attachment: fs.createReadStream(videoPath)
-                        }, () => {
-                                api.setMessageReaction("✅", event.messageID, () => {}, true);
-                                if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
-                        });
-
-                } catch (err) {
-                        console.error("TikTok Search Error:", err);
-                        api.setMessageReaction("❌", event.messageID, () => {}, true);
-                        if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
-                        return message.reply(getLang("error", err.message));
-                }
+      // API থেকে প্রথমে JSON response নেওয়া হচ্ছে
+      const apiResponse = await axios.get(
+        `${baseUrl}/api/tiksr`,
+        {
+          params: { sr: keyword },
+          timeout: 120000,
+          responseType: "arraybuffer"
         }
+      );
+
+      const contentType =
+        apiResponse.headers["content-type"] || "";
+
+      let videoUrl = null;
+
+      // API সরাসরি ভিডিও পাঠালে সেটি ফাইলে সেভ হবে
+      if (contentType.includes("video")) {
+        await fs.writeFile(videoPath, apiResponse.data);
+      } else {
+        // JSON response হলে URL বের করা হবে
+        let result;
+
+        try {
+          result = JSON.parse(
+            Buffer.from(apiResponse.data).toString("utf8")
+          );
+        } catch (e) {
+          throw new Error(
+            "API did not return valid JSON or video"
+          );
+        }
+
+        console.log("TikEdit API Result:", result);
+
+        videoUrl =
+          result.video_url ||
+          result.videoUrl ||
+          result.url ||
+          result.data?.video_url ||
+          result.data?.videoUrl ||
+          result.data?.url;
+
+        if (Array.isArray(result.data)) {
+          const item = result.data[0];
+          videoUrl =
+            item?.video_url ||
+            item?.videoUrl ||
+            item?.url ||
+            videoUrl;
+        }
+
+        if (!videoUrl || typeof videoUrl !== "string") {
+          throw new Error(
+            "Video URL not found in API response"
+          );
+        }
+
+        // URL থেকে ভিডিও ডাউনলোড
+        const videoResponse = await axios.get(videoUrl, {
+          responseType: "arraybuffer",
+          timeout: 120000,
+          maxContentLength: 26214400,
+          maxBodyLength: 26214400
+        });
+
+        await fs.writeFile(videoPath, videoResponse.data);
+      }
+
+      const stats = await fs.stat(videoPath);
+
+      if (stats.size === 0) {
+        throw new Error("Downloaded file is empty");
+      }
+
+      if (stats.size > 26214400) {
+        api.setMessageReaction(
+          "❌",
+          event.messageID,
+          () => {},
+          true
+        );
+
+        return message.reply(getLang("tooLarge"));
+      }
+
+      await message.reply({
+        body: getLang("success", keyword),
+        attachment: fs.createReadStream(videoPath)
+      });
+
+      api.setMessageReaction(
+        "✅",
+        event.messageID,
+        () => {},
+        true
+      );
+
+    } catch (err) {
+      console.error("TikEdit Error:", err);
+
+      api.setMessageReaction(
+        "❌",
+        event.messageID,
+        () => {},
+        true
+      );
+
+      return message.reply(
+        getLang("error", err.message)
+      );
+
+    } finally {
+      if (await fs.pathExists(videoPath)) {
+        try {
+          await fs.remove(videoPath);
+        } catch (cleanupError) {
+          console.error(
+            "Cleanup Error:",
+            cleanupError.message
+          );
+        }
+      }
+    }
+  }
 };
