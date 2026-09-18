@@ -89,7 +89,7 @@ module.exports = {
           `━━━━━━━━━━━━━━━━━━\n` +
           `📖 Title: ${video.title}\n` +
           `⏱ Duration: ${video.time}\n` +
-          `🖌️ Power by: ${creatorName}\n` +
+          `🖌️ Power by: shishir {creatorName}\n` +
           `━━━━━━━━━━━━━━━━━━`,
         attachment: fs.createReadStream(filePath)
       };
