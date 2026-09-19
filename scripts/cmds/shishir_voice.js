@@ -40,35 +40,35 @@ module.exports = {
 			},
 			{
 				cap: `স্বপ্ন দেখতে ভয় পেয়ো না 💭\nআজ ছোট হলেও কাল বড় হবে 🚀\nধৈর্য ধরো, সময় আসবে,⏳🕰️`,
-				link: "https://files.catbox.moe/23zj4q.mp4"
+				link: "https://i.imgur.com/Y0BoEjs.mp4"
 			},
 			{
 				cap: `মন খারাপ হলেও চুপ থেকো না 😔\nনিজের সাথে কথা বলো 🙂\nসব ঠিক হয়ে যাবে একদিন 🌸`,
-				link: "https://files.catbox.moe/gogfic.mp4"
+				link: "https://i.imgur.com/yl81ckX.mp4"
 			},
 			{
 				cap: `নিজের মতো থাকো 😎\nকারো জন্য বদলাতে যেও না ❌`,
-				link: "https://files.catbox.moe/9uvit1.mp4"
+				link: "https://i.imgur.com/yl81ckX.mp4"
 			},
 			{
 				cap: `সময় অনেক কিছু শিখায় ⏳\nমানুষ চিনতে শেখায় 😶\nভুল থেকে শিক্ষা নাও 📖`,
-				link: "https://files.catbox.moe/l15d8y.mp4"
+				link: "https://i.imgur.com/w784d3c.mp4"
 			},
 			{
 				cap: `ভালোবাসা পেতে হলে আগে নিজেকে ভালোবাসো ❤️\nনিজের যত্ন নাও 💫\nনিজেই নিজের happiness 😊🌸`,
-				link: "https://files.catbox.moe/22enjn.mp4"
+				link: "https://i.imgur.com/cLd3ejg.mp4"
 			},
 			{
 				cap: `ছোট ছোট মুহূর্ত উপভোগ করো 📸\nএইগুলোই একদিন স্মৃতি হবে 💖\nহাসো, খেলো, বাঁচো 😊✨`,
-				link: "https://files.catbox.moe/gitfya.mp4"
+				link: "https://i.imgur.com/GrY1fQk.mp4"
 			},
 			{
 				cap: `জীবন একটা যুদ্ধ ⚔️\nহার মানলে শেষ 😔\nলড়াই চালিয়ে যাও 💪🔥`,
-				link: "https://files.catbox.moe/src6qb.mp4"
+				link: "https://i.imgur.com/7hjEIBA.mp4"
 			},
 			{
 				cap: `চুপ থাকা সবসময় দুর্বলতা না 🤫\nকখনো এটা শক্তি 💯\nসব কথা বলার দরকার নেই 😌s�`,
-				link: "https://files.catbox.moe/9iqdo0.mp4"
+				link: "https://i.imgur.com/ezI0uHN.mp4"
 			}
 		];
 
