@@ -29,7 +29,7 @@ module.exports = {
     // ║       🎬 FIXED INFO VIDEO            ║
     // ╚══════════════════════════════════════╝
     // এখানে তোমার DIRECT .mp4 VIDEO LINK বসাও
-    const videoUrl = "https://i.imgur.com/Y5TrlXZ.jpeg";
+    const videoUrl = "https://i.imgur.com/pQNroPA.mp4";
 
     const info = `
 ╔══════════════════════════════════════╗
