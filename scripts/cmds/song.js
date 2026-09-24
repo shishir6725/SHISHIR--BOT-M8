@@ -1,84 +1,65 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+const A = require("axios");
+const B = require("fs-extra");
+const C = require("path");
+const S = require("yt-search");
+
+const p = C.join(__dirname, "cache", `${Date.now()}.mp3`);
+
+const nix = "https://raw.githubusercontent.com/aryannix/stuffs/master/raw/apis.json";
 
 module.exports = {
   config: {
     name: "song",
-    version: "3.0",
-    author: "xalman",
-    countDown: 2,
+    version: "0.0.1",
+    author: "ArYAN",
+    countDown: 10,
     role: 0,
-    shortDescription: { en: "Search and play a song from SoundCloud" },
-    longDescription: { en: "Fetches a matching song and sends the audio" },
-    category: "ANIME & MEDIA",
-    guide: { en: "{pn} <song name>" }
+    category: "media"
   },
 
   onStart: async function ({ api, event, args }) {
-    const { threadID, messageID } = event;
-    const query = args.join(" ");
-    if (!query) {
-      return api.sendMessage("❌ Please enter a song name.\nExample: /song Happy Nation", threadID, messageID);
-    }
+    const { threadID: t, messageID: m } = event;
+    const q = args.join(" ");
+    if (!q) return api.sendMessage("❌ Please provide a song name or link.", t, m);
 
-    api.setMessageReaction("🎵", messageID, () => {}, true);
-
-    const cacheDir = path.join(__dirname, "cache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+    api.setMessageReaction("⏳", m, event.threadID, () => {}, true);
 
     try {
-      const apiUrl = `https://xalman-apis.vercel.app/api/scdlv2?query=${encodeURIComponent(query)}`;
-      const { data } = await axios.get(apiUrl, { timeout: 20000 });
-
-      if (!data.status || !data.result || !data.result.download_url) {
-        throw new Error(data.message || "No results found");
+      const D = await A.get(nix);
+      const E = D.data.api;
+      
+      let u = q;
+      if (!q.startsWith("http")) {
+        const r = await S(q);
+        const v = r.videos[0];
+        if (!v) throw new Error("Error ytdl issue 🧘");
+        u = v.url;
       }
 
-      const { title, download_url } = data.result;
-
-      const filePath = path.join(cacheDir, `${Date.now()}.mp3`);
-      const response = await axios({
-        url: download_url,
-        method: "GET",
-        responseType: "stream",
-        headers: { 
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Referer": "https://soundcloud.com/"
-        },
-        timeout: 30000
+      const F = await A.get(`${E}/ytdl`, {
+        params: { url: u, type: "audio" }
       });
 
-      const writer = fs.createWriteStream(filePath);
-      response.data.pipe(writer);
+      if (!F.data.status || !F.data.downloadUrl) throw new Error("API Error");
 
-      await new Promise((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
-      });
+      const DL = F.data.downloadUrl;
+      const title = F.data.title || "Song";
 
-      api.setMessageReaction("✅", messageID, () => {}, true);
+      const res = await A.get(DL, { responseType: "arraybuffer" });
+      await B.outputFile(p, Buffer.from(res.data));
 
-      return api.sendMessage(
-        {
-          body: `🎧 ${title}`,
-          attachment: fs.createReadStream(filePath)
-        },
-        threadID,
-        () => {
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        },
-        messageID
-      );
+      api.setMessageReaction("✅", m, event.threadID, () => {}, true);
 
-    } catch (error) {
-      console.error("Song download error:", error);
-      api.setMessageReaction("❌", messageID, () => {}, true);
-      return api.sendMessage(
-        `❌ Failed to fetch song: ${error.message || "Unknown error"}`,
-        threadID,
-        messageID
-      );
+      return api.sendMessage({
+        body: `🎵 Title: ${title}`,
+        attachment: B.createReadStream(p)
+      }, t, () => {
+        if (B.existsSync(p)) B.unlinkSync(p);
+      }, m);
+
+    } catch (e) {
+      api.setMessageReaction("❌", m, event.threadID, () => {}, true);
+      return api.sendMessage(`❌ Error: ${e.message}`, t, m);
     }
   }
 };
