@@ -1,86 +1,109 @@
 const axios = require("axios");
+
+const API_CONFIG_URL = "https://raw.githubusercontent.com/goatbotnx/xalmanx210/refs/heads/main/apis.json";
+const API_KEY = "xalman-hub";
+let apiBaseUrl = null;
+let apiConfigRequest = null;
+
+async function getApiBaseUrl() {
+  if (apiBaseUrl) return apiBaseUrl;
+
+  if (!apiConfigRequest) {
+    apiConfigRequest = axios
+      .get(API_CONFIG_URL, { timeout: 15000 })
+      .then(({ data }) => {
+        const baseUrl = data?.[API_KEY];
+
+        if (typeof baseUrl !== "string" || !baseUrl.trim()) {
+          throw new Error(`Missing API key in apis.json: ${API_KEY}`);
+        }
+
+        apiBaseUrl = baseUrl.replace(/\/+$/, "");
+        return apiBaseUrl;
+      })
+      .finally(() => {
+        apiConfigRequest = null;
+      });
+  }
+
+  return apiConfigRequest;
+}
 const fs = require("fs-extra");
 const path = require("path");
 
 module.exports = {
   config: {
     name: "edit3",
-    aliases: ["nedit", "edit3"],
-    version: "1.6",
-    author: "FARHAN-KHAN",
-    countDown: 15,
+    aliases: ["imageedit", "ai-edit"],
+    version: "4.1",
+    author: "xalman",
+    countDown: 10,
     role: 0,
-    shortDescription: { en: "Edit image with Nano AI" },
-    longDescription: { en: "Edit image using Nano AI with enhanced stability" },
-    category: "image",
-    guide: {
-      en: "{pn} <prompt> --ratio <1:1|4:3|3:2|16:9>"
-    }
+    shortDescription: "AI Image Editor",
+    longDescription: "Edit any image using AI by replying to it with a specific prompt.",
+    category: "AI & IMAGE GENERATION",
+    guide: "{pn} [reply to image] [prompt]"
   },
 
-  onStart: async function ({ message, event, api, args }) {
-    const hasPhotoReply = event.type === "message_reply" && event.messageReply?.attachments?.[0]?.type === "photo";
+  onStart: async function ({ event, message, args, api }) {
+    const { messageReply, type, messageID, threadID } = event;
 
-    if (!hasPhotoReply) {
-      return message.reply("Please reply to an image to edit.");
+    if (
+      type !== "message_reply" ||
+      !messageReply.attachments ||
+      messageReply.attachments.length === 0 ||
+      messageReply.attachments[0].type !== "photo"
+    ) {
+      return api.sendMessage("⚠️ | Please reply to an image to start editing.", threadID, messageID);
     }
 
-    const input = args.join(" ");
-    if (!input) return message.reply("Please provide a prompt.");
+    const prompt = args.join(" ");
+    if (!prompt) {
+      return api.sendMessage("📝 | Please provide a prompt for editing.\nExample: {pn} change background to space", threadID, messageID);
+    }
 
-    const ratioMatch = input.match(/--ratio\s+(1:1|4:3|3:2|16:9)/);
-    const ratio = ratioMatch ? ratioMatch[1] : "1:1";
-    const prompt = input.replace(/--ratio\s+(1:1|4:3|3:2|16:9)/, "").trim();
-
-    const imageUrl = event.messageReply.attachments[0].url;
+    const imageUrl = encodeURIComponent(messageReply.attachments[0].url);
     const cacheDir = path.join(__dirname, "cache");
-    const cachePath = path.join(cacheDir, `edit_${Date.now()}.png`);
+    const filePath = path.join(cacheDir, `edited_image_${Date.now()}.png`);
+
+    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+
+    api.setMessageReaction("🎨", messageID, (err) => {}, true);
+    const processingMsg = await api.sendMessage("🚀 | Processing your image, please wait...", threadID);
 
     try {
-      api.setMessageReaction("⏳", event.messageID, () => {}, true);
+      const API_URL = `${await getApiBaseUrl()}/api/edit?img=${imageUrl}&prompt=${encodeURIComponent(prompt)}`;
 
-      const res = await axios.get("https://rifatapiv3.vercel.app/api/ai-image/nano", {
-        params: { 
-          url: imageUrl, 
-          p: prompt,
-          ratio: ratio
-        },
-        timeout: 180000
-      });
-
-      const resultUrl = res.data?.result;
-
-      if (!resultUrl || res.data.status !== "success") {
-        api.setMessageReaction("❌", event.messageID, () => {}, true);
-        return message.reply("Failed to edit image. Server might be busy.");
-      }
-
-      await fs.ensureDir(cacheDir);
-
-      const imageRes = await axios.get(resultUrl, {
+      const response = await axios({
+        method: 'GET',
+        url: API_URL,
         responseType: 'arraybuffer',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-        }
+        timeout: 240000 
       });
 
-      await fs.writeFile(cachePath, Buffer.from(imageRes.data));
+      const buffer = Buffer.from(response.data, "utf-8");
+      await fs.writeFile(filePath, buffer);
 
-      api.setMessageReaction("✅", event.messageID, () => {}, true);
+      api.setMessageReaction("✅", messageID, (err) => {}, true);
+      await api.unsendMessage(processingMsg.messageID);
 
-      await message.reply({
-        body: `Prompt: ${prompt}\nRatio: ${ratio}`,
-        attachment: fs.createReadStream(cachePath)
-      });
+      await api.sendMessage({
+        body: "✨ 𝗜𝗠𝗔𝗚𝗘 𝗘𝗗𝗜𝗧𝗘𝗗 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟𝗟𝗬 ✨\n━━━━━━━━━━━━━━━━━━━\nPrompt: " + prompt,
+        attachment: fs.createReadStream(filePath)
+      }, threadID, () => {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }, messageID);
 
     } catch (err) {
-      api.setMessageReaction("❌", event.messageID, () => {}, true);
-      const errorDetail = err.response?.status === 500 ? "API Server Error (500)" : err.message;
-      return message.reply(`Error: ${errorDetail}`);
-    } finally {
-      if (fs.existsSync(cachePath)) {
-        setTimeout(() => fs.remove(cachePath).catch(() => {}), 10000);
-      }
+      api.setMessageReaction("❌", messageID, (err) => {}, true);
+      if (processingMsg.messageID) await api.unsendMessage(processingMsg.messageID);
+      
+      const errorMsg = err.code === "ECONNABORTED" 
+        ? "⏱️ | Request Timeout: Server took more than 2 minutes." 
+        : "🚫 | API Error: Could not edit image.";
+
+      api.sendMessage(errorMsg, threadID, messageID);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
   }
 };
