@@ -63,7 +63,7 @@ module.exports = {
 
       writer.on('finish', () => {
         api.sendMessage({
-          body: `🎥 𝗛𝗲𝗿𝗲 𝗶𝘀 𝘆𝗼𝘂𝗿 𝗥𝗮𝗻𝗱𝗼𝗺 𝗩𝗶𝗱𝗲𝗼!\n\n🆔 𝗩𝗶𝗱𝗲𝗼 𝗡𝗮𝗺𝗲: ${randomFileName}\n👤 𝗢𝘄𝗻𝗲𝗿: 𝗬𝗼𝘂𝗿 𝗡𝗮𝗺𝗲`, 
+          body: `🎥 𝗛𝗲𝗿𝗲 𝗶𝘀 𝘆𝗼𝘂𝗿 𝗥𝗮𝗻𝗱𝗼𝗺 𝗩𝗶𝗱𝗲𝗼!\n\n🆔 𝗩𝗶𝗱𝗲𝗼 𝗡𝗮𝗺𝗲: ${randomFileName}\n👤 𝗢𝘄𝗻𝗲𝗿: 𝐒𝐇𝐈𝐒𝐇𝐈𝐑`, 
           attachment: fs.createReadStream(tempPath)
         }, threadID, () => {
           if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
