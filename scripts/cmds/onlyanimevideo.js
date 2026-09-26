@@ -18,7 +18,7 @@ module.exports.onChat = async ({ api, event }) => {
     if (event.senderID == api.getCurrentUserID()) return;
 
     const msg = event.body ? event.body.trim() : "";
-    if (msg === "🏯") {
+    if (msg === "👻") {
         return handleDriveMedia(api, event);
     }
 };
@@ -105,7 +105,7 @@ async function handleDriveMedia(api, event) {
             fileId = randomMatch[1]; 
         }
 
-        api.setMessageReaction("👀", messageID, () => {}, true);
+        api.setMessageReaction("👽", messageID, () => {}, true);
         
         const downloadUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
         const cacheDir = path.join(__dirname, "cache");
@@ -124,7 +124,7 @@ async function handleDriveMedia(api, event) {
 
         writer.on("finish", () => {
             return api.sendMessage({
-                body: `ₕₑᵣₑ ᵢₛ ₐ ᵥᵢdₑₒ Fᵣ₏ₘ 𝔐𝔯.𝔎ᵢ𝔫𝔤 ☠️✌🏼`,
+                body: `ₕₑᵣₑ ᵢₛ ₐ ᵥᵢdₑₒ SHISHIR  ☠️✌🏼`,
                 attachment: fs.createReadStream(filePath)
             }, threadID, (err) => {
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
